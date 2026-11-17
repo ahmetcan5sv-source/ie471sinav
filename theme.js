@@ -31,8 +31,25 @@ document.querySelectorAll('.q').forEach(function(e){
  var t=e.querySelector('textarea');
  if(t&&!e.id)e.id=t.id.replace(/^t_/,'');
 });
-if(location.hash){
- var el=document.getElementById(decodeURIComponent(location.hash.slice(1)));
- if(el){setTimeout(function(){el.scrollIntoView();el.style.outline='3px solid var(--acc,#2f5fd0)';setTimeout(function(){el.style.outline=''},2500)},50)}
+function target(){
+ if(!location.hash)return null;
+ try{return document.getElementById(decodeURIComponent(location.hash.slice(1)))}catch(e){return null}
+}
+var userMoved=false;
+['wheel','touchstart','keydown','mousedown'].forEach(function(ev){
+ window.addEventListener(ev,function(){userMoved=true},{passive:true,once:true});
+});
+function goHash(){
+ var el=target();
+ if(el&&!userMoved)el.scrollIntoView();
+}
+if(target()){
+ var first=target();
+ first.style.outline='3px solid var(--acc,#2f5fd0)';
+ setTimeout(function(){first.style.outline=''},3000);
+ /* retry: translators, late fonts and diagrams can shift the layout after load */
+ [0,150,400,900,1800,3000].forEach(function(ms){setTimeout(goHash,ms)});
+ window.addEventListener('load',goHash);
+ window.addEventListener('hashchange',function(){userMoved=false;goHash()});
 }
 })();
