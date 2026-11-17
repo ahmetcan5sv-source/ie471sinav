@@ -22,4 +22,17 @@ function apply(){
 b.onclick=function(){cur=cur==='dark'?'light':'dark';put(cur);apply()};
 document.body.appendChild(b);
 apply();
+
+/* Deep links: give every exam question an id (q1, q2, ...) so pages can be opened at set1.html#q3 */
+var sm=document.createElement('style');
+sm.textContent='.q{scroll-margin-top:84px}';
+document.head.appendChild(sm);
+document.querySelectorAll('.q').forEach(function(e){
+ var t=e.querySelector('textarea');
+ if(t&&!e.id)e.id=t.id.replace(/^t_/,'');
+});
+if(location.hash){
+ var el=document.getElementById(decodeURIComponent(location.hash.slice(1)));
+ if(el){setTimeout(function(){el.scrollIntoView();el.style.outline='3px solid var(--acc,#2f5fd0)';setTimeout(function(){el.style.outline=''},2500)},50)}
+}
 })();
