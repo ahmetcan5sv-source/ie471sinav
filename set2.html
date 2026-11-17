@@ -30,6 +30,7 @@ textarea{width:100%;min-height:110px;font:inherit;padding:10px;border-radius:8px
 input[type=number]{width:80px;font:inherit;padding:6px 8px;border-radius:8px;border:1px solid var(--line);background:var(--card);color:var(--ink)}
 .res{display:none;background:var(--card);border:2px solid var(--acc);border-radius:12px;padding:16px;margin:14px 0;font-size:17px}
 .res.show{display:block}
+.q{scroll-margin-top:84px}
 </style>
 </head>
 <body>
@@ -566,7 +567,7 @@ S.ans=S.ans||{};S.sc=S.sc||{};
 const $=id=>document.getElementById(id);
 const box=$("qs");
 Q.forEach(q=>{
- const d=document.createElement("div");d.className="q";
+ const d=document.createElement("div");d.className="q";d.id=q.id;
  d.innerHTML=`<h2>${q.t} <span class="pts">${q.pts} pts${q.bonus?" (bonus)":""}</span></h2><div>${q.body}</div>
  <textarea id="t_${q.id}" placeholder="Your answer..."></textarea>
  <div class="row"><button data-r="${q.id}">Show model answer</button><label>My score: <input type="number" min="0" max="${q.pts}" id="s_${q.id}"> / ${q.pts}</label></div>
@@ -600,8 +601,8 @@ draw();
 $("start").onclick=()=>{if(iv)return;iv=setInterval(()=>{left--;draw();if(left<=0){clearInterval(iv);iv=null;alert("Time is up!")}},1000)};
 $("pause").onclick=()=>{clearInterval(iv);iv=null};
 </script>
-<a class="homebtn" href="index.html" style="position:fixed;left:12px;bottom:12px;z-index:50;padding:8px 14px;border-radius:999px;background:var(--card,#fff);color:var(--ink,#1d1d1b);border:1px solid var(--line,#dcdad2);box-shadow:0 2px 8px rgba(0,0,0,.18);font:600 14px system-ui,Segoe UI,sans-serif;text-decoration:none">← Home</a>
-<script src="theme.js"></script>
+<a class="homebtn" href="index.html?v=3" style="position:fixed;left:12px;bottom:12px;z-index:50;padding:8px 14px;border-radius:999px;background:var(--card,#fff);color:var(--ink,#1d1d1b);border:1px solid var(--line,#dcdad2);box-shadow:0 2px 8px rgba(0,0,0,.18);font:600 14px system-ui,Segoe UI,sans-serif;text-decoration:none">← Home</a>
+<script src="theme.js?v=3"></script>
 <script data-goatcounter="https://ackfreak.goatcounter.com/count" async src="https://gc.zgo.at/count.js"></script>
 </body>
 </html>
