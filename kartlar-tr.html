@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>IE471 Çalışma Kartları</title>
+<style>
+:root{--bg:#f6f5f1;--card:#fff;--ink:#1d1d1b;--mut:#6b6a65;--acc:#2f5fd0;--ok:#1f8a4c;--no:#c0392b;--line:#dcdad2}
+@media (prefers-color-scheme:dark){:root{--bg:#161615;--card:#222221;--ink:#eeede8;--mut:#a09f98;--acc:#7da2ff;--ok:#4cc27d;--no:#ef7a6d;--line:#3a3a38}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,Segoe UI,sans-serif}
+.wrap{max-width:720px;margin:0 auto;padding:16px}
+h1{font-size:20px;margin:8px 0 12px}
+.bar{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;align-items:center}
+select,button{font:inherit;padding:8px 12px;border-radius:8px;border:1px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer}
+button.p{background:var(--acc);color:#fff;border-color:var(--acc)}
+button.ok{border-color:var(--ok);color:var(--ok)}button.no{border-color:var(--no);color:var(--no)}
+.stat{color:var(--mut);font-size:14px;margin-left:auto}
+.scene{perspective:1200px;margin:8px 0 14px}
+.card{position:relative;min-height:300px;cursor:pointer;transition:transform .45s;transform-style:preserve-3d}
+.card.flip{transform:rotateY(180deg)}
+.face{position:absolute;inset:0;backface-visibility:hidden;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:22px;overflow:auto;display:flex;flex-direction:column}
+.back{transform:rotateY(180deg)}
+.tag{font-size:12px;color:var(--acc);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px}
+.q{font-size:20px;font-weight:600;margin:auto 0}
+.a{font-size:16px;white-space:pre-wrap}
+.hint{font-size:12px;color:var(--mut);margin-top:auto;padding-top:10px}
+.row{display:flex;gap:8px;flex-wrap:wrap}
+.row button{flex:1;min-width:110px}
+@media (max-width:480px){.q{font-size:18px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>IE471 Systems Engineering — Çalışma Kartları</h1>
+<div class="bar">
+<select id="cat"></select>
+<select id="mode"><option value="all">Tüm kartlar</option><option value="unk">Sadece bilmediklerim</option></select>
+<button id="shuf">Karıştır</button>
+<button id="reset">Sıfırla</button>
+<span class="stat" id="stat"></span>
+</div>
+<div class="scene"><div class="card" id="card">
+<div class="face front"><div class="tag" id="tagF"></div><div class="q" id="q"></div><div class="hint">Cevap için karta dokun (boşluk tuşu)</div></div>
+<div class="face back"><div class="tag" id="tagB"></div><div class="a" id="a"></div></div>
+</div></div>
+<div class="row">
+<button id="prev">← Önceki</button>
+<button class="no" id="bad">Bilmiyorum</button>
+<button class="ok" id="good">Biliyorum</button>
+<button class="p" id="next">Sonraki →</button>
+</div>
+</div>
+<script>
+const C=[
+// TANIM
+["Tanımlar","Sistem nedir? (What is a system?)","Ortak bir amaç için birbiriyle etkileşen, bir sınırı ve çevresi olan, parçalarının toplamından fazlasını yapan (emergence) parçalar bütünü.\nDers vurgusu: Sistemi DAVRANIŞINA bakarak tanırız; genel bir SE modeli yoktur.\nEN: A set of interrelated components interacting within a boundary for a purpose, showing behaviour none of the parts shows alone."],
+["Tanımlar","Sistemin temel unsurları nelerdir?","Amaç (purpose), bileşenler, ilişkiler/etkileşimler, sınır (boundary), çevre (environment), girdi-çıktı, davranış."],
+["Tanımlar","Açık sistem nedir?","Çevresiyle enerji, madde ve bilgi alışverişi yapan; girdi alıp dönüştürüp çıktı veren ve negatif entropi sayesinde ayakta kalan sistem.\nÖrnek: canlı hücre, insan, şirket, üniversite, kafe, ECM/tedarik sistemi."],
+["Tanımlar","Kapalı sistem nedir?","Çevresiyle madde/enerji/bilgi alışverişi yapmayan sistem. Dışarıdan düzen gelmediği için entropi artar (termodinamiğin 2. yasası), sistem dengeye/durgunluğa gider.\nÖrnek (idealize): yalıtılmış termos, kapalı reaksiyon kabı. Gerçekte tam kapalı sistem yoktur."],
+["Tanımlar","Açık ve kapalı sistem farkı?","Çevre ile alışveriş: Açık VAR / Kapalı YOK\nEntropi: Açık negatif entropiyle düşük tutar / Kapalı artar\nGeri besleme ve uyum: Açıkta var (homeostasis, equifinality) / Kapalıda sınırlı."],
+["Tanımlar","Sistemin girdileri nelerdir?","Çevreden alınan enerji, madde, bilgi (+ insan, para/bütçe, talep).\nDers çerçevesi: Importation of energy (1.) ve information input (6.). Girdi → throughput → çıktı.\nÖrnek ECM: ECR, müşteri şikâyeti, kalite problemi. Tedarik: PR, bütçe, teklifler."],
+["Tanımlar","Entropi nedir?","Düzensizliğin ölçüsü. Termodinamiğin 2. yasası: kapalı sistemde entropi artar (dağılma, kullanılabilir enerji kaybı)."],
+["Tanımlar","Negatif entropi nedir? Örnek ver.","Açık sistemin çevreden aldığı enerji, bilgi, kaynak ve düzenle entropiyi azaltması. Olmazsa sistem durur.\nÖrnekler: canlı → yemek, uyku, öğrenme; şirket → yeni sipariş, yatırım, eğitim; bina → bakım, onarım; tedarik → yeni talep, bütçe, onay limitleri."],
+["Tanımlar","Entropi artışına örnekler?","Canlı: yaşlanma, hastalık. Şirket: dağınık süreçler, eksik formlar, motivasyon kaybı. Bina: çürüme. Oda: dağınıklık. Tedarik: eksik PR, uyuşmayan fatura, 'her şey acil'."],
+["Tanımlar","Complex ve complicated farkı? (Ottino)","Complicated: çok parça, her parçanın tanımlı işlevi (Boeing, saat).\nComplex: parçalar basit ama toplam davranış zengin ve öngörülemez (balık sürüsü, piyasa, Go oyunu); merkezi organizatör olmadan düzen doğar (emergence)."],
+// H1
+["Hafta 1","Kartezyen indirgemecilik (reductionism) nedir?","Büyük şeyi küçük, anlaşılır parçalara ayırma; parçaları açıklarsan bütünü de açıklarsın düşüncesi (Descartes). Karmaşık sistemlerde yetmez: parçalar bütünü açıklamaz."],
+["Hafta 1","Sistem felsefesi neden doğdu?","Her şey indirgemeci yaklaşıma uygun değildi; bazı şeyler yalnızca bütün olarak işliyordu. Bunlara karmaşık (complex) denildi."],
+["Hafta 1","Complex Systems Engineering ne yapar?","Tüm mühendislik disiplinlerini bir araya getirir; tek tek 'complicated' bilim parçalarına bölmek yerine karmaşıklıkla başa çıkmayı sağlar."],
+["Hafta 1","Deepwater Coast Guard örneği neyi gösterir?","System of Systems (SoS): helikopter, uçak, gemi, GPS uydu, yer istasyonu, insan, bilgisayar entegre. Kilit özellik birlikte çalışabilirlik (interoperability)."],
+["Hafta 1","Solve, resolve, dissolve farkı?","Solve: çözmek. Resolve: optimum için yeniden çözmek. Dissolve: problemi ortadan kaldırmak.\nÖrnek (soğuk sınıf): ısıtıcı aç / problemi yeniden tanımla / yan sınıfa geç (sıfır maliyet)."],
+["Hafta 1","3 grup bilgi nedir? (Starry Night)","1. grup: NE? (görülen, bilinen) → tek eksen X\n2. grup: NEREDE? (ressam nerede duruyor) → X–Y, paradigma değişimi burada başlar\n3. grup: KİM? (kültür, kimlik, aidiyet) → X–Y–Z\nBakış sayısı arttıkça çözüm uzayı çarpımsal büyür (2×3=6)."],
+["Hafta 1","Hocanın SE mottosu?","'SE'de yapamam yoktur. Problem yoktur.' Çözüm uzayını zihninde genişlet."],
+// H2
+["Hafta 2","Açık sistemin 9 karakteristiği?","1 Importation of energy\n2 Throughput\n3 Output\n4 Cycles of events\n5 Negative entropy\n6 Information input, negative feedback, coding\n7 Steady state & dynamic homeostasis\n8 Differentiation\n9 Equifinality"],
+["Hafta 2","Throughput nedir?","Alınan enerjinin/girdinin sistem içinde dönüştürülmesi ve taşınması. Örn. ECM: ECR → değerlendirme → onay → ECO."],
+["Hafta 2","Olay döngüsü (cycles of events)?","Çıktı yeni girdinin kaynağı olur; sistem çevrimsel işler. Örn. satış geliri hammadde alımını finanse eder."],
+["Hafta 2","6. karakteristik: bilgi, geri besleme, kodlama?","Veri → (gözlem) Bilgi → (etkileşim) Bilgi birikimi → (işleme) Zekâ.\nNegatif geri besleme sistemi hedefe döndürür; kodlama/kategorizasyon bilgiyi sınıflar."],
+["Hafta 2","Homeostasis nedir?","Kararlı durum ve dinamik denge: sistem dışarıdan etkilense de dengeyi dinamik olarak korur."],
+["Hafta 2","Differentiation (farklılaşma)?","Sistemde uzmanlaşmış alt birimlerin çoğalması. Örn. şirkette satın alma, kalite, finans birimleri."],
+["Hafta 2","Equifinality?","Aynı sonuca farklı yollarla ulaşılabilmesi. Örn. malzemeye resmi veya gayriresmi onayla ulaşmak."],
+["Hafta 2","13 sistem ilkesi (precepts)?","1 Holism 2 Organicism 3 Synthesis (tez+antitez) 4 Variety 5 Emergence 6 System (SoS) 7 Homeostasis 8 Viability 9 Purpose 10 Behavior 11 Isomorphs 12 Ideals (ideal sistem) 13 Values"],
+["Hafta 2","Emergence nedir?","Parçalarda bulunmayan, yalnızca bütünde ortaya çıkan özellik/davranış. Örn. trafik sıkışıklığı, takım ruhu, süreçteki gecikmenin oklarda oluşması."],
+["Hafta 2","Makine Çağı yaklaşımı?","ANALİZ: bütünü parçalara ayır (decomposition) → her parçanın davranışını açıkla → açıklamaları topla.\nSoru: NASIL çalışır? Betimleme biriktirir. Sınırı: parçalar bütünü açıklamaz."],
+["Hafta 2","Sistem Çağı yaklaşımı?","SENTEZ: sistemi içine alan çevreyi belirle → bütündeki misyonunu bul → davranış/özelliğini buna göre açıkla.\nSoru: NEDEN var? Sentez bilgi üretir."],
+["Hafta 2","Makine ve Sistem yaklaşımı farkı (tek cümle)?","Makine yaklaşımı 'nasıl çalışır'ı parçaları ayırarak, sistem yaklaşımı 'neden var'ı çevre ve misyon içinde birleştirerek cevaplar. Reductionism ↔ holism/synthesis."],
+["Hafta 2","Davranışlara bakmanın faydası?","Davranıştan sistemin doğrulaması (validation) ve verifikasyonu (verimlilik, güvenilirlik analizi) yapılır."],
+// H3
+["Hafta 3","Aristoteles / Hall composition law?","Bütün, parçalarının toplamından fazladır; parça, bütünün bir kesrinden fazladır."],
+["Hafta 3","Sistem yaşam döngüsü aşamaları?","1 Yönetim (management)\n2 Tasarım ve geliştirme\n3 Üretim ve/veya inşa\n4 Operasyonel kullanım ve bakım desteği\n5 Emeklilik ve malzeme bertarafı\nSoru: 'Sıradaki ne?'"],
+["Hafta 3","Çöküş (implosion) döngüsü nasıl işler?","Pozitif geri besleme: dağıtıcı etkiler → kohezyon azalır → bozulma/çözülme → çeşitlilik (variety) üretimi → daha çok dağıtıcı etki.\nÖrnek: SSCB'de bir ülke ayrılınca diğerleri cesaretlendi (domino). Hitchins: kohezyon vs dağıtıcı etkiler mücadelesi."],
+["Hafta 3","Concurrent engineering nedir?","Doğrusal ardışık süreç yerine çok fonksiyonlu entegrasyon: tasarım, üretim, kalite, tedarik baştan birlikte değerlendirir. Front-loading: problemler erken tasarımda çözülür → hızlı uygulama, az revizyon ve yeniden işleme."],
+["Hafta 3","5 katmanlı sistem modeli (alttan üste)?","L1 Ürün/alt sistem SE\nL2 Proje SE\nL3 İş (business) SE\nL4 Endüstriyel SE (tedarik zinciri)\nL5 Sosyo-ekonomik SE\nServet zinciri: ulusal → endüstriyel → kurumsal → bireysel."],
+["Hafta 3","Layer 1 paradigması?","Yenilikçi ürün/artifact yaratma: problem uzayındaki problem → çözüm uzayında kanıtlanmış çözüm. Çözüm, semptomları etkisiz hale getirmesiyle KANITLANIR."],
+["Hafta 3","Layer 4'te akış yönleri?","Ürün akışı soldan sağa (tedarikçi → müşteri), talep akışı sağdan sola. İki kademeli işletme, her birinin kendi proje SE kapasitesi var."],
+["Hafta 3","Layer 5 örneği?","Eski Mısır Eski Krallık: parasız, faydacı mal üretmeden başarılı sosyo-ekonomik sistem. Politika, yasa, vergi, standartlar bu katmandadır."],
+["Hafta 3","5 layer örneği: otomobil üretimi","L5 emisyon standartları, vergi, ulaşım politikası\nL4 otomotiv endüstrisi, tedarikçiler, bayi ağı\nL3 otomobil firması (strateji, finans, kalite)\nL2 yeni model geliştirme projesi\nL1 araç, motor, şanzıman, elektronik"],
+["Hafta 3","5 layer örneği: ECM","L1 ürün bileşeni, çizim, BOM\nL2 ECR→ECO planlama, ekip koordinasyonu\nL3 maliyet ve iş hedefleri\nL4 tedarikçi ve üretim ağı etkileri\nL5 yasal ve güvenlik düzenlemeleri"],
+["Hafta 3","5 layer operation: katmanlar nasıl işler?","Üst katman alt katmanı kısıtlar (politika → endüstri → şirket → proje → ürün). Alt katman üst katmanı besler (ürün başarısı → şirket geliri → ulusal servet). L1'de çözüm semptomlarla kanıtlanır; L4'te ürün ve talep ters yönde akar."],
+// H4
+["Hafta 4","Sistem metodolojisi nedir?","Sistem pratisyenlerinin sistemleri, sorunları ve bağlamları araştırmak, anlamak ve gerektiğinde çözmek/yeniden çözmek/ortadan kaldırmak için kullandığı yöntem, kural ve postülalar bütünü. SE'nin 'nasıl'ıdır."],
+["Hafta 4","Metodoloji neden paradigmadır?","Evrensel problem çözücü olması için problem tipinden ve bağlamdan bağımsız olmalı; bir 'iş yapma biçimi' (pattern) olarak paradigma kategorisine girer."],
+["Hafta 4","Sistem metodolojisinin 9 boyutu?","Bilimsel, mantık-epistemolojik, zaman, kültürel/politik/davranışsal, ahlaki-etik, sosyal, organizasyonel, ekonomik, teknolojik."],
+["Hafta 4","Birleşik problem çözme paradigması?","Genel problem çözme paradigması + SE problem çözme paradigması birleşir; amaç problemi yalnızca çözmek değil gerektiğinde resolve/dissolve etmektir. Akış: semptom → problem anlama → ideal kriter → alternatif seçimi → dene → semptomlar yok mu? Evet=kanıt, hayır=probleme dön."],
+// FFBD
+["FFBD","FFBD/FAKD nedir?","Fonksiyonel Akış Blok Diyagramı: sistemin fonksiyonlarını, sıralarını ve mantıksal ilişkilerini gösterir; fonksiyonel ayrıştırma ile ana fonksiyonlar seviye seviye alt fonksiyonlara bölünür."],
+["FFBD","Blok yazım kuralı?","Dikdörtgen, sol üstte numara (1.0, 2.3, 1.3.3.1), içinde fiil + nesne ('Check budget', 'Send PO')."],
+["FFBD","Referans (Ref.) bloğu nedir?","Köşeli parantez [ Ref. ... ]. Alt seviye diyagram Ref. bloğuyla başlar ve bir sonraki bloğun Ref.'iyle biter."],
+["FFBD","AND / OR / G / G̅ farkı?","AND: paralel, hepsi yapılır. OR: alternatif, biri yapılır. G (Go): devam. G̅ (No-Go): alternatif akış veya geri döngü; ok aşağı ayrılır."],
+["FFBD","Seviyeler arası bağlantı nasıl gösterilir?","Üst seviyedeki bloktan alt seviyeye kesik çizgi; genişletilen bloğun altına '~' işareti."],
+["FFBD","Kafe Bistro Level 1?","1.0 Kafeye giriş → 2.0 Masaya otur → 3.0 Sipariş ver → 4.0 Yemek/içecek tüket → 5.0 Hesap öde → 6.0 Kafeden çık."],
+["FFBD","Kafe Level 2: 4.0 ve 5.0?","4.0: (AND) yemeği ye + içeceği iç → (OR) yemeği bitir / içeceği bitir → hesabı talep et.\n5.0: hesabı kontrol et → ödeme yap → (OR) nakit / kredi kartı → ödeme fişi al."],
+["FFBD","ECM FFBD Level 1 (7 blok)?","1.0 ECR al → 2.0 İncele ve kaydet → 3.0 Değerlendir → 4.0 Onay kararı ver → 5.0 ECO hazırla ve yayınla → 6.0 Değişikliği uygula → 7.0 Doğrula ve kapat.\n5.0'da AND: çizim güncelle + BOM güncelle."],
+["FFBD","Tedarik FFBD Level 1 (8 blok)?","1.0 İhtiyacı belirle ve PR oluştur → 2.0 PR onayla (No-Go 2.4 bütçe yok) → 3.0 Teklif iste → 4.0 Değerlendir ve tedarikçi seç → 5.0 PO ver ve takip et → 6.0 Malı teslim al → 7.0 Kalite kontrol → 8.0 Teslimi kabul et ve PR kapat."],
+["FFBD","Sınavda FFBD çizim sırası?","1) Level 1: 5–8 blok soldan sağa, fiil+nesne, 1.0, 2.0…\n2) Bir bloğu aç: Ref. ile başla/bitir, AND/OR koy\n3) Gerekirse Level 3 (1.3.1, 1.3.2…)\n4) Go/No-Go ekle\n5) Seviyeler arasına kesik çizgi çek."],
+// VIDEO
+["Video 1 (TR)","Paradigma / 'değer sayım' nedir?","Doğuştan alınan eğitim ve bilgilerin oluşturduğu bakış açısı/hareket tarzı. Hocanın Türkçe önerisi: değer sayım (değer + varsayım). Her problem bir paradigmanın ürünüdür; paradigma değişince problem ve çözüm değişir."],
+["Video 1 (TR)","Paradigmanın en önemli kazanımı?","Çözüm kümesinin büyümesi. Problemlerin farklılaşmasından korkmamalı. Paradigma değişimi zordur ve direnç görür; büyük sistemler küçük sorularla yıkılır."],
+["Video 1 (TR)","Para sistemi sorgulaması: Test 1?","Merkez bankası parayı faizle borç verir: verilen P, geri istenen P(1+i). Faiz parası nereden gelecek? Mekanizma başlangıç noktasında çöker."],
+["Video 1 (TR)","Para sistemi: miktar dengesi testi?","Emisyon ≈ 650 milyar TL, toplam kredi ≈ 14,5 trilyon TL. Fark kısmi rezerv sistemi ve para çarpanıyla yaratılır; geometrik seri toplamı S = a(1−qⁿ)/(1−q)."],
+["Video 1 (TR)","Aktifler = Pasifler ve 'para = borç'?","Mevduat + Sermaye = Kredi + Nakit. Zamana göre türev: dM/dt + dS/dt = dK/dt + dN/dt. Sermaye ve nakit sabit → dM/dt = dK/dt → para = borç."],
+["Video 2 (Collins)","Engineer kelimesinin kökeni ve INCOSE SE tanımı?","Latince ingeniare (yaratıcı/ustalıklı kişi); ilk unvan Leonardo da Vinci. SE: disiplinler arası, başarılı, amaçlı ve sürdürülebilir sistemlerin gerçekleştirilmesini sağlayan yaklaşım."],
+["Video 2 (Collins)","Collins'in 3 vakası ve dersleri?","Thameslink (3,5 milyar £): başarı yolcu davranışına bağlı, eski model yetersiz.\nBiyoyakıt: aynı ürün bölgeye göre farklı karbon emisyonu → belirsiz bilim = sürdürülemez politika.\nİzlanda volkanik külü: düzenleme 'görünür külden kaçın' diyordu, ince kül görünmezdi; 5 gün, uzman ağı, hükümet baş bilim danışmanı."],
+["Video 2 (Collins)","Collins'in sonuçları?","Çözümlerin problemlerle birlikte evrimi (co-evolution), gömülü öğrenme, yönetişim, standart+inovasyon, politik sermaye sistemin parçası, rekabet ve işbirliği bir arada, plan amaç değil araçtır."],
+["Video 3 (Ottino)","Ottino'nun araç kutusu?","Agent-based modeling (NetLogo: termit, kuş sürüsü, karınca), ağ teorisi (ekolojik ağ, internet, havayolu), istatistiksel mekanik/econophysics, simülasyon. Sonuç: mühendisler bunları standart araç setine almalı."],
+["Video 3 (Ottino)","Emergence örneği ve Schelling?","Schelling şehir ayrışma modeli: basit bireysel kurallardan karmaşık toplu davranış çıkar; bireysel niyetten gruba çıkarım zordur. Termit tepeleri, kuş sürüsü: merkezi komutan yok."],
+["Video 3 (Ottino)","Ortak sözlük fikri?","Karmaşıklık, tıp, hukuk, mühendislik, işletme gibi alanların iletişim kurabileceği ortak vocabulary olabilir; yeni disiplinler doğurur. Anderson 1972: 'More is different'."],
+// MAKINE / SISTEM YAKLASIMI ILE INCELEME
+["Makine–Sistem incelemesi","'Makine Çağı yaklaşımıyla incele' deniyorsa hangi adımları yazarım?","1) Sistemi parçalarına ayır (decomposition)\n2) Her parçanın davranış/özelliğini ayrı ayrı açıkla\n3) Bu açıklamaları topla (aggregate) → bütünü açıkladığını varsay\n4) Soru: NASIL çalışır?\n5) Sonuna sınırlılığı yaz: etkileşimler ve emergence kaçar, alt-optimizasyon olur."],
+["Makine–Sistem incelemesi","'Sistem Çağı yaklaşımıyla incele' deniyorsa hangi adımları yazarım?","1) Sistemi içine alan daha büyük sistemi/ÇEVREYİ belirle\n2) Sistemin o bütün içindeki MİSYONUNU/rolünü bul\n3) Sistemin davranış ve özelliklerini bu role göre açıkla\n4) Soru: NEDEN var, ne işe yarıyor?\n5) Sonuç: SENTEZ bilgi üretir."],
+["Makine–Sistem incelemesi","Örnek: ÜNİVERSİTEYİ Makine Çağı yaklaşımıyla incele","1) Parçalar: fakülteler, bölümler, derslikler, kütüphane, öğrenciler, personel, bütçe\n2) Her parça ayrı: bölüm müfredatı, kütüphane koleksiyonu, derslik kapasitesi\n3) Topla: parçalar iyi çalışıyorsa üniversite iyidir\nSınırlılık: bölümler arası kopukluk, mezunların işe uygunluğu ve topluma katkı bu bakışta görünmez."],
+["Makine–Sistem incelemesi","Örnek: ÜNİVERSİTEYİ Sistem Çağı yaklaşımıyla incele","1) Çevre: devlet/YÖK politikası, sanayi, toplum, diğer üniversiteler, iş piyasası\n2) Misyon: nitelikli insan gücü, bilgi (Ar-Ge) üretmek, toplumsal fayda\n3) Açıklama: müfredat, kontenjan, kütüphane ve bütçe bu misyona hizmetine göre değerlendirilir\nSonuç: neden var sorusu çevresel ihtiyaçlarla cevaplanır; sistem iyileştirmesi ilişkilerden başlar."],
+["Makine–Sistem incelemesi","Örnek: HASTANEYİ iki yaklaşımla incele (kısa)","Makine: bölümleri ayır (acil, ameliyathane, laboratuvar, eczane), her birinin kapasitesini ve performansını ölç, topla.\nSistem: çevre (sağlık politikası, nüfus, sigorta, ambulans, diğer hastaneler), misyon (toplum sağlığını korumak) → birimleri bu misyona ve aralarındaki akışa (hasta yolu, gecikme) göre değerlendir."],
+["Makine–Sistem incelemesi","Örnek: ECM / TEDARİK sistemini iki yaklaşımla incele (ödev bağlantısı)","Makine: kutuları tek tek incele (kalite onaylıyor, finans ödüyor, mal kabul sayıyor); her kutu çalışıyor.\nSistem: çevre (tedarikçiler, yasalar, müşteri), misyon (zamanında malzeme/doğru değişiklik); gecikme kutularda değil OKLARDA (onay bekleyen belgeler, geri dönen PR). Çözüm de ilişkilerdedir."],
+["Makine–Sistem incelemesi","Makine ve Sistem yaklaşımını karşılaştıran sınav tablosunu say.","Yöntem: analiz/ayrıştırma ↔ sentez/birleştirme\nSoru: nasıl ↔ neden\nBakış: parça→bütün ↔ bütün→parça (çevre ve misyon)\nBilgi: betimleme biriktirir ↔ sentez bilgi üretir\nİlke: reductionism ↔ holism, emergence, synthesis\nSınır: emergence kaçar ↔ karmaşıklığı yönetir."],
+["Makine–Sistem incelemesi","Sınavda iki yaklaşımı birden nasıl yazarım? (şablon)","1) Sistemi tanımla (sınır, çevre, amaç)\n2) Makine Çağı: parçala → açıkla → topla → sınırlılık\n3) Sistem Çağı: çevre → misyon → davranış → sentez\n4) Fark cümlesi: makine 'nasıl', sistem 'neden' sorusunu cevaplar\n5) Sonuç: karmaşık sistemlerde sistem yaklaşımı gerekir, çünkü parçalar bütünü açıklamaz."],
+// MAKALE
+["Makaleler (GRT)","GRT devlet modeli: 4 katman, çarpan, personel?","1L çekirdek yönetim: çarpan 1, %1,562\n2L güvenlik: 3, %4,687\n3L Ar-Ge: 12, %18,75\n4L üretim: 48, %75\n(2N+1) geometrik dizi, altın orana benzer (%3,39 hata)."],
+["Makaleler (GRT)","2050 yükseköğretim makalesi özeti?","Model-Based Engineering ile 3 bölüm: problem tespiti → modelleme → çözüm. Hedef 35 yılda %80, 45–50 yılda %100. 10 bölge, 7 öncelikli alan, 14 teknoloji dönüşüm enstitüsü, 7 teknoloji geliştirme merkezi, üniversite işbirliği."],
+["Makaleler (GRT)","Mühendislikte 3 temel yöntem (2019 makale)?","Model-Based Engineering (MBE), Component-Based Engineering (CBE), Software-Based Engineering (SBE). En kapsamlısı MBE."],
+// ODEV
+["Ödev şablonu","Sistem analizi için 10 başlık (HW1)?","1 Giriş (sınır, çevre) 2 Sistem felsefesi 3 Paradigma ve çözüm uzayı 4 Problem ve entropi 5 Açık sistem 1–5 6 Açık sistem 6–9 7 İlkeler 1–7 8 İlkeler 8–13 + Makine/Sistem Çağı 9 Yaşam döngüsü 10 5 katman, metodoloji, sonuç."],
+["Ödev şablonu","'Şu yaklaşımla incele' sorusuna cevap kalıbı?","Sistem tanımı → sınır ve çevre → (istenen yaklaşımın adımları: sistem/makine/9 karakteristik/13 ilke/5 katman/yaşam döngüsü/9 boyut/paradigma/FFBD) → örnek veya şema → sonuç: parçalar değil ilişkiler önemli."],
+["Ödev şablonu","ECM'de çöküş riski örneği?","Departmanlar bağımsız hareket edince variety artar, dağıtıcı etkiler güçlenir; kaos → hata → suçlama → süreç domino gibi çöker (pozitif geri besleme). Çözüm kanıtı: semptomların tamamen yok olması."]
+];
+const KEY="ie471_cards_v1";
+let st={};try{st=JSON.parse(localStorage.getItem(KEY)||"{}")}catch(e){}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(st))}catch(e){}}
+const cats=["Tüm konular",...new Set(C.map(c=>c[0]))];
+const $=id=>document.getElementById(id);
+cats.forEach(c=>{const o=document.createElement("option");o.textContent=c;$("cat").appendChild(o)});
+let deck=[],i=0;
+function build(keepShuffle){
+ const cat=$("cat").value,mode=$("mode").value;
+ deck=C.map((c,idx)=>({c,idx})).filter(x=>(cat==="Tüm konular"||x.c[0]===cat)&&(mode==="all"||st[x.idx]!=="ok"));
+ i=0;render();
+}
+function render(){
+ $("card").classList.remove("flip");
+ if(!deck.length){$("q").textContent="Bu filtrede kart yok. Tebrikler!";$("a").textContent="";$("tagF").textContent="";$("tagB").textContent="";stat();return}
+ const {c,idx}=deck[i];
+ $("tagF").textContent=c[0]+" • "+(i+1)+"/"+deck.length;$("tagB").textContent=c[0];
+ $("q").textContent=c[1];$("a").textContent=c[2];stat();
+}
+function stat(){
+ const ok=C.filter((_,k)=>st[k]==="ok").length;
+ $("stat").textContent="Biliyorum: "+ok+"/"+C.length;
+}
+function go(d){if(!deck.length)return;i=(i+d+deck.length)%deck.length;render()}
+function mark(v){if(!deck.length)return;st[deck[i].idx]=v;save();if($("mode").value==="unk"&&v==="ok"){deck.splice(i,1);if(i>=deck.length)i=0;render()}else go(1)}
+$("card").onclick=()=>$("card").classList.toggle("flip");
+$("next").onclick=()=>go(1);$("prev").onclick=()=>go(-1);
+$("good").onclick=()=>mark("ok");$("bad").onclick=()=>mark("no");
+$("cat").onchange=build;$("mode").onchange=build;
+$("shuf").onclick=()=>{for(let k=deck.length-1;k>0;k--){const j=Math.floor(Math.random()*(k+1));[deck[k],deck[j]]=[deck[j],deck[k]]}i=0;render()};
+$("reset").onclick=()=>{st={};save();build()};
+document.addEventListener("keydown",e=>{if(e.key===" "){e.preventDefault();$("card").classList.toggle("flip")}else if(e.key==="ArrowRight")go(1);else if(e.key==="ArrowLeft")go(-1)});
+build();
+</script>
+<script data-goatcounter="https://ackfreak.goatcounter.com/count" async src="https://gc.zgo.at/count.js"></script>
+</body>
+</html>
