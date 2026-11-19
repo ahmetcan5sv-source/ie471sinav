@@ -1,0 +1,608 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>IE471 Mock Exam Set 2</title>
+<style>
+:root{--bg:#f6f5f1;--card:#fff;--ink:#1d1d1b;--mut:#6b6a65;--acc:#2f5fd0;--ok:#1f8a4c;--no:#c0392b;--line:#dcdad2;--soft:#eef2fc}
+@media (prefers-color-scheme:dark){:root{--bg:#161615;--card:#222221;--ink:#eeede8;--mut:#a09f98;--acc:#7da2ff;--ok:#4cc27d;--no:#ef7a6d;--line:#3a3a38;--soft:#1f2636}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 system-ui,Segoe UI,sans-serif}
+.wrap{max-width:820px;margin:0 auto;padding:16px 16px 80px}
+h1{font-size:22px;margin:8px 0 4px}
+.sub{color:var(--mut);margin-bottom:14px}
+.top{position:sticky;top:0;z-index:5;background:var(--bg);padding:10px 0;border-bottom:1px solid var(--line);display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.timer{font-variant-numeric:tabular-nums;font-size:20px;font-weight:700}
+.timer.low{color:var(--no)}
+button{font:inherit;padding:8px 14px;border-radius:8px;border:1px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer}
+button.p{background:var(--acc);color:#fff;border-color:var(--acc)}
+.spacer{flex:1}
+.score{font-weight:700}
+.q{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;margin:14px 0}
+.q h2{font-size:17px;margin:0 0 6px}
+.pts{color:var(--acc);font-size:13px;font-weight:600}
+.q ul{margin:6px 0 10px 20px;padding:0}
+textarea{width:100%;min-height:110px;font:inherit;padding:10px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--ink);resize:vertical}
+.ans{display:none;margin-top:10px;background:var(--soft);border-left:4px solid var(--acc);border-radius:8px;padding:12px 14px;white-space:pre-wrap;font-size:15px}
+.ans.show{display:block}
+.row{display:flex;gap:10px;align-items:center;margin-top:10px;flex-wrap:wrap}
+input[type=number]{width:80px;font:inherit;padding:6px 8px;border-radius:8px;border:1px solid var(--line);background:var(--card);color:var(--ink)}
+.res{display:none;background:var(--card);border:2px solid var(--acc);border-radius:12px;padding:16px;margin:14px 0;font-size:17px}
+.res.show{display:block}
+.q{scroll-margin-top:84px}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>IE471 Systems Engineering — Mock Exam, Set 2</h1>
+<div class="sub">90 minutes · 100 points (+5 bonus). Different systems from Set 1. Write first, then reveal the model answer and score yourself.</div>
+
+<div class="top">
+<span class="timer" id="timer">90:00</span>
+<button class="p" id="start">Start timer</button>
+<button id="pause">Pause</button>
+<span class="spacer"></span>
+<span class="score" id="score">Score: 0 / 100</span>
+</div>
+
+<div id="qs"></div>
+
+<div class="res" id="res"></div>
+<div class="row"><button class="p" id="finish">Finish and show result</button><button id="clear">Clear everything</button></div>
+</div>
+
+<script>
+/* IE471 shared animated diagram library. Usage: DG.mount(element, presetName, autoplay) */
+(function(){
+if(window.DG)return;
+const css=`
+:root{--c0:rgba(47,95,208,.16);--c1:rgba(31,138,76,.16);--c2:rgba(214,140,20,.18);--c3:rgba(142,68,173,.16);--c4:rgba(192,57,43,.14)}
+@media (prefers-color-scheme:dark){:root{--c0:rgba(125,162,255,.22);--c1:rgba(76,194,125,.2);--c2:rgba(240,170,60,.22);--c3:rgba(190,120,230,.22);--c4:rgba(239,122,109,.2)}}
+.dgc{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:8px;margin-top:12px;overflow-x:auto;color:var(--ink)}
+.dgt{font-weight:700;margin:2px 4px 6px;font-size:15px}
+.dgb{display:flex;gap:6px;align-items:center;margin:6px 0;flex-wrap:wrap}
+.dgb button{font:inherit;font-size:14px;padding:5px 10px;border-radius:8px;border:1px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer}
+.dgn{color:var(--mut);font-size:13px;margin-left:auto}
+.dgcap{background:var(--soft);border-left:4px solid var(--acc);border-radius:8px;padding:8px 12px;min-height:44px;font-size:14px;white-space:normal}
+.dgc svg.dg{width:100%;min-width:760px;height:auto;display:block}
+.dgc svg.dg text{fill:var(--ink);font-size:12.5px;font-family:system-ui,Segoe UI,sans-serif}
+.dgc svg.dg .nm{font-size:10px;fill:var(--acc);font-weight:700}
+.dgc svg.dg .gl{font-weight:700;fill:var(--acc);font-size:12px}
+.dgc svg.dg .lv{font-weight:700;fill:var(--mut);font-size:13px}
+.dgc svg.dg .big{font-size:15px;font-weight:700}
+.dgc svg.dg .red{fill:var(--no);font-weight:700}
+.dgc svg.dg .bx{fill:var(--card);stroke:var(--ink);stroke-width:1.5}
+.dgc svg.dg .ref{fill:none;stroke:var(--acc);stroke-width:1.5;stroke-dasharray:3 3}
+.dgc svg.dg .ar{stroke:var(--ink);stroke-width:1.6;fill:none}
+.dgc svg.dg .lk{stroke:var(--acc);stroke-width:1.4;stroke-dasharray:5 4;fill:none}
+.dgc svg.dg .flow{stroke-dasharray:7 5;animation:dgdash 1s linear infinite}
+@keyframes dgdash{to{stroke-dashoffset:-12}}
+.dgc svg.dg .env{fill:none;stroke:var(--mut);stroke-width:1.5;stroke-dasharray:8 5}
+.dgc svg.dg .sysb{fill:var(--soft);stroke:var(--acc);stroke-width:2}
+.dgc svg.dg .bd{fill:var(--acc)}
+.dgc svg.dg .bdt{fill:#fff;font-weight:700;font-size:12px}
+.dgc svg.dg .lay{stroke:var(--ink);stroke-width:1.5}
+.dgc svg.dg .lay0{fill:var(--c0)}.dgc svg.dg .lay1{fill:var(--c1)}.dgc svg.dg .lay2{fill:var(--c2)}.dgc svg.dg .lay3{fill:var(--c3)}.dgc svg.dg .lay4{fill:var(--c4)}
+.dgc .st{opacity:0;transition:opacity .6s}
+.dgc .st.on{opacity:1}
+.dgc .st.cur .bx,.dgc .st.cur .lay,.dgc .st.cur .sysb{stroke:var(--acc);stroke-width:2.6}
+.dgc svg.dg .dom{fill:var(--c4);stroke:var(--no);stroke-width:1.5;transform-box:fill-box;transform-origin:100% 100%;transition:transform .5s}
+.dgc svg.dg.s5 .dom{transform:rotate(70deg)}
+.dgc svg.dg .decay{fill:var(--no);opacity:.75;transform-box:fill-box;transform-origin:50% 100%;transition:transform 3s}
+.dgc svg.dg.s2 .decay{transform:scaleY(.12)}
+.dgc svg.dg .hold{fill:var(--ok);opacity:.75}
+.dgc svg.dg .meter{fill:none;stroke:var(--ink);stroke-width:1.5}
+`;
+const stl=document.createElement('style');stl.textContent=css;document.head.appendChild(stl);
+const dh=document.createElement('div');
+dh.innerHTML='<svg width="0" height="0" style="position:absolute"><defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" style="fill:var(--ink)"/></marker></defs></svg>';
+(document.body||document.documentElement).appendChild(dh);
+
+const E=s=>String(s).replace(/&(?!amp;)/g,'&amp;');
+const T=(x,y,t,c='',a='middle')=>`<text x="${x}" y="${y}" class="${c}" text-anchor="${a}">${E(t)}</text>`;
+const G=(n,i)=>`<g class="st" data-s="${n}">${i}</g>`;
+const A=(x1,y1,x2,y2,c='')=>`<line class="ar ${c}" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" marker-end="url(#ah)"/>`;
+const P=(d,c='')=>`<path class="ar ${c}" d="${d}" marker-end="url(#ah)"/>`;
+const LK=(x1,y1,x2,y2)=>`<line class="lk" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"/>`;
+const Bd=(x,y,n)=>`<circle class="bd" cx="${x}" cy="${y}" r="11"/><text class="bdt" x="${x}" y="${y+4}" text-anchor="middle">${n}</text>`;
+function B(x,y,w,h,num,txt,cls=''){const ls=txt.split('|'),n=ls.length;let s=`<rect class="bx ${cls}" x="${x}" y="${y}" width="${w}" height="${h}" rx="6"/>`;if(num)s+=`<text class="nm" x="${x+5}" y="${y+12}">${num}</text>`;ls.forEach((l,i)=>{s+=`<text x="${x+w/2}" y="${y+h/2+(i-(n-1)/2)*14+(num?6:4)}" text-anchor="middle">${E(l)}</text>`});return s}
+function R(x,y,w,h,txt){return `<rect class="ref" x="${x}" y="${y}" width="${w}" height="${h}"/><text x="${x+w/2}" y="${y+h/2+4}" text-anchor="middle" style="fill:var(--acc)">[ ${E(txt)} ]</text>`}
+const SV=(vb,inner)=>`<svg class="dg" viewBox="${vb}">${inner}</svg>`;
+const plain=s=>s.replace(/\|/g,' ');
+
+/* ---------- generic FFBD ---------- */
+function ffbd(sp){
+ const l1=sp.l1,x0=20,pitch=140,W=110;
+ const steps=['Press Play: the diagram is built level by level.'];
+ let out=[];
+ let s1=T(20,22,'LEVEL 1 — operational flow','lv','start');
+ l1.forEach((t,i)=>{const x=20+i*136;s1+=B(x,36,112,54,(i+1)+'.0',t);if(i<l1.length-1)s1+=A(x+112,63,x+136,63)});
+ out.push(G(1,s1));steps.push('Level 1: '+l1.length+' blocks, verb + object, numbered 1.0–'+l1.length+'.0, flowing left to right.');
+ let step=2,Y=128,last=null;
+ function lvl2(b,Y,tag){
+  const k=b.i+1,items=b.items,n=items.length;
+  const hasG=items.some(it=>typeof it!=='string');
+  const yc=Y+(hasG?72:40);
+  let svg=T(20,Y,`LEVEL 2 — block ${k}.0 ${plain(l1[b.i])}${b.sfx?' ('+b.sfx+')':''}`,'lv','start');
+  let num=0;const nxt=()=>k+'.'+(++num);
+  const xs=j=>x0+(j+1)*pitch;const col=[];
+  svg+=R(x0,yc-25,W,50,b.ref[0]);
+  let prev=[{x:x0+W,y:yc}];
+  items.forEach((it,j)=>{
+   const x=xs(j);let ins;
+   if(typeof it==='string'){const id=nxt();svg+=B(x,yc-23,W,46,id,it);ins=[yc];col[j]={outs:[yc],box:{x,y:yc-23,id}}}
+   else{const kind=it.and?'AND':'OR',arr=it.and||it.or,ys=[yc-35,yc+35],boxes=[];arr.forEach((t,m)=>{const id=nxt();svg+=B(x,ys[m]-23,W,46,id,t);boxes.push({x,y:ys[m]-23,id})});ins=ys;col[j]={outs:ys,boxes};svg+=T(x-17,yc+4,kind,'gl')}
+   if(prev.length===ins.length&&prev.length>1)prev.forEach((p,m)=>{svg+=A(p.x,p.y,x,ins[m])});
+   else prev.forEach(p=>ins.forEach(iy=>{svg+=A(p.x,p.y,x,iy)}));
+   prev=col[j].outs.map(oy=>({x:x+W,y:oy}));
+  });
+  const xo=xs(n);svg+=R(xo,yc-25,W,50,b.ref[1]);prev.forEach(p=>{svg+=A(p.x,p.y,xo,yc)});
+  let bottom=yc+(hasG?62:28);
+  if(b.gate){
+   const g=b.gate,d=col[g.at].box,xd=d.x;
+   svg+=T(xd+W+15,yc-8,g.g||'Go','gl');
+   if(g.rej){svg+=A(xd+55,yc+23,xd+55,yc+60)+T(xd+65,yc+46,g.ng,'gl','start')+B(xd,yc+60,W,44,nxt(),g.rej);bottom=yc+110}
+   else{svg+=A(xd+55,yc+23,xd+20,yc+70)+A(xd+55,yc+23,xd+140,yc+70)+T(xd+124,yc+42,g.ng,'gl','start')+B(xd-35,yc+70,W,46,nxt(),g.alt[0])+B(xd+85,yc+70,W,46,nxt(),g.alt[1])+T(xd+80,yc+134,'OR  ·  ↩ back to '+col[g.back].box.id,'gl');bottom=yc+140}
+  }
+  if(b.loop){
+   const l=b.loop,d=col[l.at].box,xd=d.x,tg=col[l.to].boxes[l.sub],tcx=tg.x+55;
+   svg+=A(xd+55,yc+23,xd+55,yc+70)+T(xd+65,yc+52,l.label,'gl','start')+B(xd,yc+70,W,46,nxt(),l.box)+P(`M${xd},${yc+93} L${tcx},${yc+93} L${tcx},${tg.y+46}`,'flow')+T((xd+tcx)/2,yc+86,l.lbl||'loop back','gl');
+   bottom=yc+120;
+  }
+  const H=bottom-Y+12;
+  return{svg,H,col,yc};
+ }
+ function caption(b){const it=b.items,hasAnd=it.some(x=>x.and),hasOr=it.some(x=>x.or);
+  return b.cap||(`Level 2 of ${b.i+1}.0: starts with ${b.ref[0]} and ends with ${b.ref[1]}.`+(hasAnd?' AND = parallel functions, all are done.':'')+(hasOr?' OR = alternatives, only one is done.':'')+(b.gate?' Go/No-Go at the decision: Go continues, No-Go leads to the alternative path.':'')+(b.loop?' The loop returns defective goods and re-inspects.':'')+' Dashed line + “~” link the levels.')}
+ function link(i,Yb,first){const xc=20+i*136+56;if(first)return LK(xc,90,xc,Yb-16)+T(xc+10,104,'~','lv','start');return `<path class="lk" d="M${xc},90 V110 H952 V${Yb-16}"/>`+T(xc+10,104,'~','lv','start')}
+ const blocks=[sp.a,sp.b].filter(Boolean);let first=true;
+ blocks.forEach(b=>{
+  const r=lvl2(b,Y,'');out.push(G(step,link(b.i,Y,first)+r.svg));steps.push(caption(b));
+  last={b,r,Y};Y+=r.H+22;step++;first=false;
+ });
+ if(sp.c){
+  const c=sp.c,r=last.r,col=r.col[c.item];const bx=col.boxes?col.boxes[c.sub]:col.box;
+  const cx=bx.x+12,cy=bx.y+46;
+  const Yc=Y;let svg=LK(cx,cy,cx,Yc-16)+T(cx+8,cy+14,'~','lv','start');
+  svg+=T(20,Yc,`LEVEL 3 — block ${c.num} ${c.name}`,'lv','start');
+  const yy=Yc+14,n=c.items.length;
+  svg+=R(x0,yy,W,46,c.ref[0]);
+  let px=x0+W;
+  c.items.forEach((t,j)=>{const x=x0+(j+1)*pitch;svg+=A(px,yy+23,x,yy+23)+B(x,yy,W,46,c.num+'.'+(j+1),t);px=x+W});
+  const xo=x0+(n+1)*pitch;svg+=A(px,yy+23,xo,yy+23)+R(xo,yy,W,46,c.ref[1]);
+  out.push(G(step,svg));steps.push(c.cap||`Level 3 of ${c.num}: further decomposition; same Ref. start/end rule and dashed link.`);
+  Y=Yc+76;
+ }
+ return{svg:SV(`0 0 960 ${Y+6}`,out.join('')),steps};
+}
+
+/* ---------- 5 layers ---------- */
+function layers(p){
+ let s='';
+ p.rows.forEach((l,i)=>{const y=20+i*84;s+=G(i+1,`<rect class="lay lay${i}" x="230" y="${y}" width="500" height="68" rx="8"/>`+T(250,y+28,l[0],'big','start')+T(250,y+52,l[1],'','start'))});
+ s+=G(6,A(190,30,190,414)+T(190,16,'constrains ↓','gl')+T(190,436,'policy → product','gl'));
+ s+=G(7,A(770,414,770,30)+T(770,16,'feeds ↑','gl')+T(770,436,'value → wealth','gl'));
+ s+=G(8,`<rect class="bx" x="790" y="104" width="160" height="68" rx="8"/>`+T(870,128,'product → customer')+T(870,148,'← demand flows back')+T(480,462,'Wealth chain: national → industrial → corporate → individual','big'));
+ const nm=p.rows.map(r=>r[0]);
+ return{svg:SV('0 0 960 480',s),steps:['Press Play: the five-layer model of '+p.name+'.',nm[0]+': policy, law, funding and rules shape everything below.',nm[1]+': the industry and its supply chain.',nm[2]+': the organization as a business.',nm[3]+': a specific project.',nm[4]+': the product itself (a solution here is proven by neutralizing the symptoms).','Upper layers constrain lower layers: policy → industry → company → project → product specification.','Lower layers feed upper layers: product success → company revenue → industrial and national wealth.','In L4 product flows supplier → customer while demand flows back. Wealth chain: national → industrial → corporate → individual.']};
+}
+
+/* ---------- machine vs systems ---------- */
+function ms(p){
+ const n=p.parts.length,gap=n>1?(440-n*80)/(n-1):0;
+ let a=T(230,16,'MACHINE AGE — analysis','lv')+B(160,28,140,44,'',p.sys),b='',c='';
+ p.parts.forEach((t,i)=>{const x=15+i*(80+gap);b+=A(230,72,x+40,130)+B(x,130,80,40,'',t);c+=T(x+40,190,'✓ explain','gl')});
+ const d=A(230,200,230,248)+B(140,250,180,50,'','Σ parts = whole ?')+T(230,330,'HOW does it work?','big')+T(230,356,'misses interactions → sub-optimization','red');
+ const e=T(730,16,'SYSTEMS AGE — synthesis','lv')+`<ellipse class="env" cx="730" cy="200" rx="220" ry="150"/>`+T(730,92,p.env[0])+T(730,108,p.env[1]);
+ const f=T(730,140,p.mission,'gl');
+ const g=B(660,170,140,60,'',p.sys)+A(520,200,660,200,'flow')+A(800,200,945,200,'flow')+T(590,190,'flows in')+T(730,290,'WHY does it exist?','big')+T(730,314,'behaviour judged by mission + flows');
+ return{svg:SV('0 0 960 380',G(1,a+b)+G(2,c)+G(3,d)+G(4,e)+G(5,f)+G(6,g)),steps:['Press Play: the same system ('+p.sys.toLowerCase()+') analysed with both approaches.','Machine Age step 1: decompose the whole into parts.','Machine Age step 2: explain each part separately.','Machine Age step 3: aggregate the explanations. Question asked: HOW does it work? Limit: interactions are missed.','Systems Age step 1: identify the surrounding environment (the containing whole).','Systems Age step 2: find the system\'s mission within that environment.','Systems Age step 3: explain behaviour from that role. Question asked: WHY does it exist? Synthesis yields knowledge.']};
+}
+
+/* ---------- collapse loop ---------- */
+function collapse(){
+ let s=G(1,B(235,48,130,44,'','Dispersive|influences'));
+ s+=G(2,P('M365,70 Q460,70 460,186','flow')+B(395,188,130,44,'','Cohesion|falls'));
+ s+=G(3,P('M460,232 Q460,350 365,350','flow')+B(235,328,130,44,'','Decay /|breakdown'));
+ s+=G(4,P('M235,350 Q140,350 140,232','flow')+B(75,188,130,44,'','Variety|generation')+P('M140,188 Q140,70 235,70','flow')+T(300,210,'positive','gl')+T(300,226,'feedback loop','gl'));
+ let dom='';for(let i=0;i<6;i++)dom+=`<rect class="dom" x="${620+i*42}" y="250" width="26" height="60" style="transition-delay:${i*0.25}s"/>`;
+ s+=G(5,dom+T(745,335,'USSR: one breaks away → domino fall','gl'));
+ s+=G(6,`<rect class="bx" x="610" y="50" width="280" height="86" rx="8"/>`+T(750,74,'Concurrent engineering','big')+T(750,96,'design · production · quality · procurement')+T(750,114,'together from day 1 (front-loading)')+P('M610,100 L180,112')+T(150,126,'✕','red big')+T(745,176,'cohesion kept: fewer revisions, less rework','gl'));
+ return{svg:SV('0 0 920 400',s),steps:['Press Play: the positive feedback loop that collapses complex systems.','Dispersive influences appear (e.g. one republic breaks away from the USSR).','System cohesion falls.','Decay / breakdown follows.','Variety generation feeds more dispersive influences: a self-reinforcing positive feedback loop.','The domino fall (USSR example).','Concurrent engineering breaks the loop: all functions work together from the start, problems are solved in design (front-loading).']};
+}
+
+/* ---------- open system ---------- */
+function open9(ex){
+ let s=`<rect class="env" x="10" y="10" width="940" height="440" rx="14"/>`+T(30,36,'ENVIRONMENT','lv','start')+`<rect class="sysb" x="300" y="100" width="360" height="250" rx="12"/>`+T(480,122,'SYSTEM (boundary)','lv');
+ s+=`<rect class="bx" x="330" y="150" width="300" height="90" rx="8"/>`;
+ s+=G(1,A(70,210,330,210,'flow')+T(190,196,'energy · matter · money','gl')+Bd(64,188,1));
+ s+=G(2,T(480,170,'Throughput: transform inputs','big')+Bd(330,150,2));
+ s+=G(3,A(630,210,900,210,'flow')+T(765,196,'products · services · waste','gl')+Bd(880,190,3));
+ s+=G(4,P('M880,215 C880,50 100,50 100,205','flow')+T(480,78,'output feeds new input','gl')+Bd(480,90,4));
+ s+=G(5,A(610,440,570,352,'flow')+T(620,436,'new order imported','gl','start')+Bd(590,395,5));
+ s+=G(6,A(330,440,380,352,'flow')+T(320,436,'information input','gl','end')+P('M610,250 Q480,305 350,250','flow')+T(480,300,'negative feedback','gl')+Bd(420,285,6));
+ s+=G(7,T(480,338,'steady state: balance kept','gl')+Bd(375,334,7));
+ s+=G(8,B(345,182,85,44,'','Unit A')+B(440,182,85,44,'','Unit B')+B(535,182,85,44,'','Unit C')+Bd(335,232,8));
+ s+=G(9,A(70,265,330,232,'flow')+T(110,288,'different paths, same result','gl','start')+Bd(90,246,9));
+ return{svg:SV('0 0 960 460',s),steps:['Press Play: the nine characteristics of an open system'+(ex.name?' ('+ex.name+')':'')+'.','1 Importation of energy: '+ex.in,'2 Throughput: '+ex.thr,'3 Output: '+ex.out,'4 Cycles of events: '+ex.cyc,'5 Negative entropy: '+ex.neg,'6 Information input and negative feedback: '+ex.fb,'7 Steady state and dynamic homeostasis: '+ex.hom,'8 Differentiation: '+ex.dif,'9 Equifinality: '+ex.eq]};
+}
+
+/* ---------- GRT ---------- */
+function grt(){
+ const L=[['1L Core government','×1','1.562%',190,1.562],['2L Security','×3','4.687%',300,4.687],['3L R&D','×12','18.75%',400,18.75],['4L Production','×48','75%',500,75]];
+ let s=T(480,22,'Geometric Ratio Technique — state pyramid','lv');
+ L.forEach((l,i)=>{const y=40+i*80,bw=Math.max(3,l[4]*2.5);s+=G(i+1,`<rect class="lay lay${i}" x="${300-l[3]/2}" y="${y}" width="${l[3]}" height="60" rx="8"/>`+T(300,y+26,l[0],'big')+T(300,y+46,'power multiplier '+l[1])+`<rect class="hold" x="660" y="${y+18}" width="${bw}" height="24"/>`+T(660+bw+8,y+36,l[2],'gl','start'))});
+ s+=G(5,T(480,380,'(2N+1) geometric sequence ≈ golden ratio (3.39% error); R&D layer: 4-fold economic effect','gl'));
+ return{svg:SV('0 0 960 400',s),steps:['Press Play: the Geometric Ratio Technique state model.','1L core government: multiplier 1, 1.562% of population.','2L security: multiplier 3, 4.687%.','3L R&D: multiplier 12, 18.75%.','4L production: multiplier 48, 75%.','The (2N+1) geometric sequence resembles the golden ratio (3.39% error).']};
+}
+
+/* ---------- life cycle ---------- */
+function life(p){
+ let s=G(1,`<rect class="bx" x="20" y="20" width="920" height="46" rx="8"/>`+T(480,48,'1 Management — decides “What is next?” at every stage','big'));
+ const st=['2 Design &|development','3 Production /|construction','4 Operational use &|maintenance support','5 Retirement &|material disposal'];
+ st.forEach((t,i)=>{const x=40+i*230;s+=G(i+2,B(x,110,200,70,'',t)+(i<3?A(x+200,145,x+230,145):'')+(p.cur===i+2?T(x+100,102,'▼ you are here','red'):''))});
+ s+=G(6,P('M840,180 C840,270 140,270 140,180','flow')+T(480,262,'“What is next?” → redesign / replace → new cycle','gl'));
+ return{svg:SV('0 0 960 300',s),steps:['Press Play: the system life cycle.','Management: decides the next step at every stage ("What is next?").','Design and development.','Production and/or construction.','Operational use and maintenance support'+(p.cur===4?' — '+p.note:'')+'.','Retirement and material disposal.','Management decides: refurbish, upgrade, or retire and replace, which starts a new design cycle.']};
+}
+
+/* ---------- entropy (question-specific labels) ---------- */
+function entropy(ex){
+ const lab=ex.label||'ORDER';
+ let s=G(1,`<rect class="env" x="100" y="45" width="200" height="250"/>`+T(200,34,ex.closed||'CLOSED system','big')+`<rect class="meter" x="165" y="60" width="70" height="200"/><rect class="decay" x="165" y="60" width="70" height="200"/>`+T(200,282,lab,'gl')+T(200,318,ex.closedNote||'no arrows cross the boundary')
+  +`<rect class="env" x="560" y="45" width="300" height="250"/>`+T(710,34,ex.open||'OPEN system','big')+`<rect class="meter" x="675" y="60" width="70" height="200"/><rect class="hold" x="675" y="90" width="70" height="170"/>`+T(710,282,lab,'gl'));
+ s+=G(2,T(200,338,ex.decay||'entropy ↑ → order decays (2nd law)','red'));
+ s+=G(3,A(380,130,560,130,'flow')+T(385,118,'negative entropy:','gl','start')+A(380,190,560,190,'flow')+T(385,208,ex.neg||'energy · information','gl','start')+A(860,160,935,160,'flow')+T(770,318,ex.keep||'order is kept (homeostasis)','gl'));
+ s+=G(4,T(30,360,ex.lines[0],'','start')+T(30,382,ex.lines[1],'','start'));
+ return{svg:SV('0 0 960 400',s),steps:['Press Play: '+(ex.intro||'closed vs open system')+'.',(ex.closed||'Closed system')+': nothing crosses the boundary. '+(ex.open||'Open system')+': it exchanges with the environment.',(ex.decay||'Entropy increases, order decays (2nd law of thermodynamics)')+'.','Negative entropy ('+(ex.neg||'energy, information, resources')+') keeps the open system in order: '+(ex.keep||'homeostasis')+'.',ex.lines[0]+' — '+ex.lines[1]]};
+}
+
+/* ---------- 3 groups of information ---------- */
+function groups3(){
+ const g1=T(260,24,'3 GROUPS OF INFORMATION → solution space','lv')+A(110,300,430,300)+T(440,304,'X','big','start')+T(260,330,'WHAT? what is seen / known → 2 solutions','gl')+`<circle cx="200" cy="300" r="7" fill="var(--acc)"/><circle cx="320" cy="300" r="7" fill="var(--acc)"/>`;
+ const g2=A(110,300,110,50)+T(110,40,'Y','big')+T(40,150,'WHERE?','gl','start')+[230,160,90].map(y=>`<line class="lk" x1="110" y1="${y}" x2="360" y2="${y}"/>`+[200,320].map(x=>`<circle cx="${x}" cy="${y}" r="7" fill="var(--ok)"/>`).join('')).join('')+T(390,160,'2 × 3 = 6','big','start');
+ const g3=A(110,300,60,352)+T(30,372,'Z','big','start')+T(70,392,'WHO? culture · identity · belonging → keeps growing','gl','start');
+ const k=G(4,`<rect class="bx" x="560" y="120" width="390" height="100" rx="8"/>`+T(755,150,'Starry Night (Van Gogh, 1889)','big')+T(755,176,'What: the painting · Where: the painter at the window')+T(755,198,'Who: culture, identity of the viewer'));
+ return{svg:SV('0 0 960 420',G(1,g1)+G(2,g2)+G(3,g3)+k),steps:['Press Play: three groups of information widen the solution space.','Group 1, WHAT? one axis: 2 solutions.','Group 2, WHERE? the Y axis turns it into a plane: 2 × 3 = 6 solutions. Paradigm change starts here.','Group 3, WHO? culture, identity, belonging: a third dimension; the solution space keeps growing.','Example: Starry Night. What is painted, where the painter stands (St. Rémy window), who sees it.']};
+}
+
+/* ---------- solve / resolve / dissolve (question-specific) ---------- */
+function srd(p){
+ let s=G(1,B(20,150,220,80,'',p.problem)+T(130,140,'PROBLEM','lv'));
+ p.cards.forEach((c,i)=>{const y=20+i*135;s+=G(i+2,A(240,190,420,y+50)+`<rect class="bx" x="420" y="${y}" width="520" height="100" rx="8"/>`+T(436,y+28,c[0],'big','start')+T(436,y+54,c[1],'','start')+T(436,y+76,c[2],'','start'))});
+ return{svg:SV('0 0 960 430',s),steps:['Press Play: '+p.intro,'The problem: '+plain(p.problem)+'.','SOLVE: '+p.cards[0][1]+' '+p.cards[0][2],'RESOLVE: '+p.cards[1][1]+' '+p.cards[1][2],'DISSOLVE: '+p.cards[2][1]+' '+p.cards[2][2]]};
+}
+
+/* ---------- system anatomy ---------- */
+function anatomy(p){
+ let s=G(3,`<rect class="env" x="10" y="10" width="940" height="330" rx="14"/>`+T(30,34,'ENVIRONMENT: '+p.env,'lv','start'));
+ s+=G(2,`<rect class="sysb" x="270" y="85" width="420" height="205" rx="12"/>`+T(480,104,'SYSTEM boundary','lv'));
+ s+=G(1,B(300,125,120,50,'',p.comps[0])+B(540,125,120,50,'',p.comps[1])+B(420,205,120,50,'',p.comps[2])+A(420,150,540,150)+A(590,175,540,205)+A(420,230,360,175)+T(480,142,'interact','gl'));
+ s+=G(4,A(40,175,270,175,'flow')+T(150,160,'inputs: '+p.in,'gl')+A(690,175,920,175,'flow')+T(805,160,'outputs: '+p.out,'gl'));
+ s+=G(5,T(480,278,'whole > sum of the parts (emergence)','gl')+T(480,322,'Purpose: '+p.purpose,'big'));
+ return{svg:SV('0 0 960 345',s),steps:['Press Play: the anatomy of a system ('+p.name+').','Components that interact (arrows) with each other.','The boundary separates the system from everything else.','The environment: everything outside the boundary that exchanges with the system.','Inputs enter and outputs leave across the boundary.','The system has a purpose and shows emergence: behaviour none of the parts shows alone.']};
+}
+
+/* ---------- open vs closed ---------- */
+function openClosed(){
+ const L=G(1,`<rect class="env" x="60" y="60" width="330" height="200"/>`+T(225,48,'CLOSED system','big')+B(150,120,150,80,'','Components|(fixed matter, energy)')+T(225,285,'no exchange across the boundary')+T(225,308,'entropy ↑ → runs down to equilibrium','red'));
+ const R=G(2,`<rect class="env" x="570" y="60" width="330" height="200"/>`+T(735,48,'OPEN system','big')+B(660,120,150,80,'','Throughput|(transform)')+A(440,160,660,160,'flow')+T(480,148,'energy · matter · info','gl')+A(810,160,950,160,'flow')+T(910,185,'outputs','gl')+P('M810,230 Q735,275 660,230','flow')+T(735,285,'negative feedback keeps order','gl'));
+ const F=G(3,T(480,335,'Open systems survive by importing negative entropy; closed systems only run down','big'));
+ return{svg:SV('0 0 960 350',L+R+F),steps:['Press Play: open vs closed system.','Closed: no exchange with the environment, entropy increases (2nd law). Idealized example: insulated thermos.','Open: imports inputs, transforms them, exports outputs, uses feedback. Example: a company.','Difference: negative entropy and exchange with the environment.']};
+}
+
+/* ---------- inputs and outputs of a given system ---------- */
+function io(p){
+ let s=G(1,`<rect class="env" x="10" y="10" width="940" height="340" rx="14"/>`+T(30,34,'ENVIRONMENT: '+p.env,'lv','start')+`<rect class="sysb" x="360" y="110" width="240" height="140" rx="12"/>`+T(480,172,p.sys,'big')+T(480,192,'throughput: transform inputs'));
+ const n=p.inputs.length;
+ let a=T(30,62,'INPUTS','lv','start'),b=T(750,62,'OUTPUTS','lv','start');
+ p.inputs.forEach((t,i)=>{const y=90+i*66,ty=130+i*(100/(n-1));a+=T(30,y+4,t,'','start')+A(215,y,360,ty,'flow')});
+ const m=p.outputs.length;
+ p.outputs.forEach((t,i)=>{const y=90+i*66,ty=130+i*(100/(m-1));b+=A(600,ty,735,y,'flow')+T(745,y+4,t,'','start')});
+ s+=G(2,a)+G(3,b)+G(4,P('M840,318 C840,346 120,346 120,318','flow')+T(480,326,p.fb,'gl'));
+ return{svg:SV('0 0 960 355',s),steps:['Press Play: inputs and outputs of '+p.name+'.','The system boundary and environment.','Inputs taken from the environment: '+p.inputs.join(', ')+'.','Outputs given back: '+p.outputs.join(', ')+'.','Feedback: '+p.fb+'.']};
+}
+
+/* ---------- equifinality ---------- */
+function equifin(){
+ let s=G(1,B(20,110,130,60,'','Requester|needs material')+B(810,110,130,60,'','Material|received')+T(480,24,'FORMAL route (slow, controlled)','gl')+B(200,40,130,50,'','PR form|submitted')+B(380,40,130,50,'','Manager|approves')+B(560,40,130,50,'','Purchasing|orders')+A(150,130,200,70)+A(330,65,380,65)+A(510,65,560,65)+A(690,65,810,130));
+ s+=G(2,T(480,226,'INFORMAL route (fast, uncontrolled)','red')+`<rect class="bx" x="380" y="236" width="200" height="50" rx="6" style="stroke:var(--no)"/>`+T(480,266,'phone call / informal OK')+P('M150,150 Q200,260 380,261','flow')+P('M580,261 Q760,260 810,150','flow'));
+ s+=G(3,T(480,320,'Equifinality: the same material is reached by different paths → people bypass the formal route, control and traceability weaken','gl'));
+ return{svg:SV('0 0 960 340',s),steps:['Press Play: equifinality in a procurement system.','Formal route: PR → manager approval → purchasing → material.','Informal route: a phone call or informal approval reaches the same material faster.','Equifinality (the same end state through different paths) is a problem here: the workaround arrows weaken control.']};
+}
+
+/* ---------- complex vs complicated ---------- */
+function cx(){
+ const names=['gear','spring','dial','crown','pin','bridge','rotor','jewel','lever','wheel','barrel','stem'];
+ let a=T(240,24,'COMPLICATED','lv');names.forEach((t,i)=>{a+=B(60+(i%4)*105,50+Math.floor(i/4)*70,95,50,'',t)});
+ a+=T(240,292,'many parts, each with a strictly defined function','gl')+T(240,312,'(Boeing jumbo jet, mechanical watch)');
+ let b=T(720,24,'COMPLEX','lv')+`<ellipse class="env" cx="720" cy="150" rx="170" ry="95"/>`;
+ for(let i=0;i<18;i++){b+=`<circle cx="${560+(i*83)%320}" cy="${70+(i*47)%160}" r="7" fill="var(--acc)"/>`}
+ b+=T(720,292,'simple parts, rich collective behaviour, no central organizer','gl')+T(720,312,'(school of fish, market, game of Go)');
+ const c=G(3,T(480,345,'Emergence: order appears from the interactions, not from a controller','big'));
+ return{svg:SV('0 0 960 360',G(1,a)+G(2,b)+c),steps:['Press Play: complex vs complicated.','Complicated: many parts, each with a defined function; the whole can be explained part by part.','Complex: simple parts, but the collective behaviour is rich and emerges without a central organizer.','Key difference: emergence. Complexity is about interactions, not about the number of parts.']};
+}
+
+/* ---------- system of systems ---------- */
+function sos(){
+ const names=['Helicopters','Aircraft','Cutters','GPS satellite','Ground station','People','Computers'];
+ let s=G(1,`<circle class="sysb" cx="480" cy="200" r="55"/>`+T(480,196,'Coast Guard','big')+T(480,214,'SoS','big'));
+ let nd='',ln='';names.forEach((t,i)=>{const ang=(-90+i*360/7)*Math.PI/180,x=480+290*Math.cos(ang),y=200+140*Math.sin(ang);nd+=B(Math.round(x-55),Math.round(y-18),110,36,'',t);ln+=A(480+60*Math.cos(ang),200+55*Math.sin(ang),x-50*Math.cos(ang),y-26*Math.sin(ang),'')});
+ s+=G(2,nd+ln);
+ const ring=G(3,`<ellipse class="env" cx="480" cy="200" rx="290" ry="140"/>`+T(480,365,'interoperability: all assets act together','gl'));
+ s+=G(4,B(730,340,210,46,'','Local & federal|authorities')+A(730,355,540,230,'flow'));
+ s=ring+s;
+ return{svg:SV('0 0 960 395',s),steps:['Press Play: a System of Systems (Deepwater Coast Guard program).','The SoS: independent systems integrated into one capability.','Its elements: helicopters, aircraft, cutters, GPS satellite, ground station, people, computers.','Key feature: interoperability among all assets.','…and with local and federal authorities, so it can react to unforeseen circumstances.']};
+}
+
+/* ---------- reductionism and paradigm ---------- */
+function reduct(){
+ let a=T(235,24,'REDUCTIONISM','lv')+B(170,40,130,40,'','WHOLE');
+ ['Part A','Part B','Part C','Part D'].forEach((t,i)=>{a+=A(235,80,70+i*115,130)+B(20+i*115,130,100,40,'',t)+T(70+i*115,192,'✓ explain','gl')});
+ const b=A(235,205,235,238)+B(110,240,250,48,'','Σ parts explained = whole explained ?')+T(235,320,'✗ parts do not explain the whole (emergence, interactions)','red');
+ let c=T(725,24,'PARADIGM = viewpoint','lv')+B(620,40,210,50,'','Same problem:|Middle East conflict');
+ ['London','Moscow','Ankara','Beijing'].forEach((t,i)=>{c+=A(725,90,545+i*115,150)+B(495+i*115,150,100,40,'',t)});
+ const d=T(725,225,'each viewpoint → a different picture of the problem','gl')+T(725,250,'new viewpoint → new problem → new solution set')+T(725,282,'paradigm change = problem and solution change','big');
+ return{svg:SV('0 0 960 345',G(1,a)+G(2,b)+G(3,c)+G(4,d)),steps:['Press Play: reductionism vs paradigm.','Reductionism (Descartes): decompose the whole into parts and explain each part.','…then add the explanations: but for complex systems the parts do not explain the whole.','Paradigm: a viewpoint formed since birth; the same problem looks different from London, Moscow, Ankara or Beijing.','Changing the paradigm changes both the problem and the solution; the solution set grows.']};
+}
+
+/* ---------- concurrent engineering ---------- */
+function concurrent(p){
+ const r=p.roles;
+ let s=G(1,T(20,22,'LINEAR (sequential) process','lv','start')+r.map((t,i)=>T(110,60+i*34,t,'','end')+`<rect class="lay lay${i}" x="${120+i*160}" y="${46+i*34}" width="150" height="24" rx="4"/>`).join(''));
+ s+=G(2,`<text x="760" y="${60+3*34+6}" class="red" text-anchor="start">✕ problem found late</text>`+P('M800,190 L860,190 L860,34 L195,34 L195,44','flow')+T(530,28,'rework: the whole chain repeats (costly)','red'));
+ s+=G(3,T(20,230,'CONCURRENT engineering','lv','start')+r.map((t,i)=>T(110,268+i*34,t,'','end')+`<rect class="lay lay${i}" x="${120+i*12}" y="${254+i*34}" width="560" height="24" rx="4"/>`).join('')+`<text x="140" y="${254+4*34+18}" class="gl">✓ problem found early in design (front-loading)</text>`);
+ s+=G(4,T(480,446,p.out,'big'));
+ return{svg:SV('0 0 960 462',s),steps:['Press Play: concurrent engineering for '+p.name+'.','Linear process: each function waits for the previous one.','A problem found late forces the whole chain to repeat: costly rework.','Concurrent engineering: '+r.join(', ')+' work together from the very start.','Outcome: '+p.out]};
+}
+
+/* ---------- 9 methodology dimensions ---------- */
+function dims(p){
+ const N=['Scientific','Logic & epistemological','Time','Cultural / political / behavioral','Moral & ethical','Social','Organizational','Economic','Technological'];
+ let s='';
+ N.forEach((n,i)=>{const col=i%3,row=Math.floor(i/3),x=15+col*312,y=20+row*100;s+=G(row+1,`<rect class="lay lay${row}" x="${x}" y="${y}" width="300" height="86" rx="8"/>`+T(x+12,y+28,(i+1)+' '+n,'big','start')+T(x+12,y+54,p.ex[i][0],'','start')+(p.ex[i][1]?T(x+12,y+72,p.ex[i][1],'','start'):''))});
+ return{svg:SV('0 0 960 325',s),steps:['Press Play: the nine dimensions of the systems methodology'+(p.name?' ('+p.name+')':'')+'.','1–3: Scientific, Logic & epistemological, Time.','4–6: Cultural/political/behavioral, Moral & ethical, Social.','7–9: Organizational, Economic, Technological.']};
+}
+
+/* ---------- problem-solving paradigm (question-specific) ---------- */
+function method(p){
+ p=p||{};
+ const nm=[p.sym||'Symptoms|(problem space)',p.und||'Understand|the problem (model)',p.crit||'Set ideal|criteria',p.opt||'Generate &|select options',p.try||'Try the solution|(small scale)'];
+ let s='';
+ nm.forEach((t,i)=>{const x=20+i*148;s+=G(i+1,B(x,80,118,54,'',t)+(i>0?A(x-30,107,x,107):''))});
+ s+=G(6,`<polygon class="bx" points="850,50 930,107 850,164 770,107"/>`+T(850,104,'Symptoms')+T(850,120,'neutralized?')+A(738,107,774,107));
+ s+=G(7,A(850,164,850,200)+T(862,188,'YES','gl','start')+B(770,200,160,50,'','Solution PROVEN'));
+ s+=G(8,P('M850,50 L850,28 L227,28 L227,78','flow')+T(540,20,'NO → back to the problem','red'));
+ return{svg:SV('0 0 960 280',s),steps:['Press Play: the combined problem-solving paradigm'+(p.name?' ('+p.name+')':'')+'.','Start from the symptoms in the problem space'+(p.symTxt?': '+p.symTxt:'')+'.','Understand the problem through a model or diagram'+(p.undTxt?': '+p.undTxt:'')+'.','Set the ideal criteria'+(p.critTxt?': '+p.critTxt:'')+'.','Generate options and select the best (solve, resolve or dissolve)'+(p.optTxt?': '+p.optTxt:'')+'.','Try the solution first in a small area'+(p.tryTxt?': '+p.tryTxt:'')+'.','Check: are the symptoms neutralized?','If yes, the solution is proven.','If not, return to the problem.']};
+}
+
+/* ---------- 13 precepts (system-specific hints) ---------- */
+function precepts(p){
+ const L=[['1 Holism','treat the whole, not parts'],['2 Organicism','units react like organs'],['3 Synthesis','thesis + antithesis'],['4 Variety','many kinds of inputs'],['5 Emergence','whole shows new properties'],['6 System','system of systems'],['7 Homeostasis','dynamic balance'],['8 Viability','ability to survive'],['9 Purpose','why it exists'],['10 Behavior','how we recognize it'],['11 Isomorphs','same structure elsewhere'],['12 Ideals','the ideal system'],['13 Values','what it must honour']];
+ const grp=i=>i<4?1:i<7?2:i<10?3:4;
+ let s='';
+ L.forEach((l,i)=>{const col=i%4,row=Math.floor(i/4),x=15+col*236,y=20+row*76;s+=G(grp(i),`<rect class="lay lay${grp(i)-1}" x="${x}" y="${y}" width="225" height="62" rx="8"/>`+T(x+12,y+26,l[0],'big','start')+T(x+12,y+48,(p&&p.hints)?p.hints[i]:l[1],'','start'))});
+ return{svg:SV('0 0 960 330',s),steps:['Press Play: the 13 system precepts'+(p&&p.name?' applied to '+p.name:'')+'.','1–4: Holism, Organicism, Synthesis, Variety.','5–7: Emergence, System (of systems), Homeostasis.','8–10: Viability, Purpose, Behavior.','11–13: Isomorphs, Ideals, Values.']};
+}
+
+/* ---------- money system questioning ---------- */
+function money(){
+ let s=G(1,T(20,24,'TEST 1 — loan and interest','lv','start')+B(40,45,150,60,'','Central bank')+B(420,45,150,60,'','Market')+A(190,62,420,62)+T(305,54,'lends P = 100','gl')+A(420,92,190,92)+T(305,112,'asks back P(1+i) = 110','red')+T(600,70,'Only 100 exists in the market:','big','start')+T(600,94,'where does the extra 10 come from?','red','start'));
+ s+=G(2,T(20,160,'TEST 2 — quantity balance','lv','start')+`<rect class="hold" x="40" y="176" width="35" height="22"/>`+T(85,192,'base money ≈ 650 billion TL','gl','start')+`<rect class="lay lay0" x="40" y="208" width="780" height="22"/>`+T(50,224,'total credit ≈ 14.5 trillion TL','gl','start')+T(40,256,'the difference is created by banks: fractional reserve + money multiplier (geometric series)','','start'));
+ s+=G(3,T(20,292,'ASSETS = LIABILITIES','lv','start')+T(40,318,'Deposits + Capital = Credit + Cash   (M + S = K + N)','big','start')+T(40,342,'d/dt:  dM/dt + dS/dt = dK/dt + dN/dt;   capital S and cash N constant → dM/dt = dK/dt','','start')+T(40,372,'MONEY = DEBT','red big','start'));
+ return{svg:SV('0 0 960 390',s),steps:['Press Play: the instructor\'s money-system questioning.','Test 1: the central bank lends P at interest i but expects P(1+i) back; the interest cannot come from the money that was lent, so the mechanism fails at its starting point.','Test 2: about 650 billion TL of base money vs about 14.5 trillion TL of credit; banks create the difference (fractional reserve, money multiplier).','Assets = liabilities; taking time derivatives with S and N constant gives money = debt.']};
+}
+
+/* ---------- Collins (video 2) ---------- */
+function collins(){
+ const C=[['Thameslink','£3.5bn rail modernization','success depends on passenger behaviour','model built on 30-year-old trains','lesson: understand purpose and model'],['Biofuels','same crop, different region','very different carbon emissions','some worse than diesel','lesson: uncertain science → bad policy'],['Volcanic ash','rule: avoid visible ash','fine silicate ash is invisible','5-day crisis, expert networks','lesson: ready processes + experts']];
+ let s=G(1,`<rect class="bx" x="20" y="12" width="920" height="58" rx="8"/>`+T(480,36,'INCOSE: systems engineering = an interdisciplinary approach enabling successful, purposeful systems','big')+T(480,58,'“Engineer”: Latin ingeniare (ingenious person); first holder of the title: Leonardo da Vinci'));
+ C.forEach((c,i)=>{const x=20+i*310;s+=G(i+2,`<rect class="lay lay${i}" x="${x}" y="90" width="290" height="160" rx="8"/>`+T(x+14,118,c[0],'big','start')+c.slice(1,4).map((t,j)=>T(x+14,146+j*24,t,'','start')).join('')+T(x+14,230,c[4],'gl','start'))});
+ s+=G(5,T(480,285,'Lessons: co-evolution of solutions and problems · governance · political capital is part of the system · a plan is a means, not an end','gl'));
+ return{svg:SV('0 0 960 310',s),steps:['Press Play: Brian Collins (UCL).','Definition of systems engineering and origin of “engineer”.','Case 1: Thameslink.','Case 2: Biofuels.','Case 3: Icelandic volcanic ash.','Overall lessons.']};
+}
+
+/* ---------- Ottino (video 3) ---------- */
+function ottino(){
+ const C=[['Agent-based modeling','NetLogo: termite piles,','bird flocks, ant trails'],['Network theory','ecological webs, internet,','air-transport network'],['Statistical mechanics','econophysics,','fat-tailed fluctuations'],['Simulation','what-if experiments on','emergent behaviour']];
+ let s=G(1,T(480,28,'Complex ≠ complicated: simple parts → rich collective behaviour; order emerges with no central organizer','big'));
+ s+=G(2,C.map((c,i)=>{const x=20+i*232;return `<rect class="lay lay${i}" x="${x}" y="60" width="216" height="110" rx="8"/>`+T(x+108,92,c[0],'big')+T(x+108,122,c[1])+T(x+108,142,c[2])}).join(''));
+ s+=G(3,`<rect class="bx" x="20" y="200" width="920" height="70" rx="8"/>`+T(480,228,'Message: engineering should put complexity tools into its standard toolkit.','big')+T(480,252,'Complexity as a shared vocabulary across disciplines → new disciplines (Anderson 1972: “More is different”).'));
+ return{svg:SV('0 0 960 290',s),steps:['Press Play: Julio Ottino (Northwestern).','Complex systems: emergence without a central organizer (Schelling, flocks, termites).','The toolbox: agent-based models, networks, statistical mechanics, simulation.','Main message for engineering.']};
+}
+
+/* ---------- presets ---------- */
+const ECM={name:'ECM',in:'complaints, quality problems, supplier changes (ECRs), budget, people.',thr:'ECR reviewed, evaluated, approved by the change board and turned into an ECO.',out:'updated product and documents; scrap and rework are waste outputs.',cyc:'a better product leads to new requests; revision loops repeat.',neg:'new requests, training, standards, revision control; without them the system stops.',fb:'data becomes information when classified (urgency, impact); accept/reject loops correct the process.',hom:'approval limits keep open ECRs balanced; "everything urgent" breaks it.',dif:'design, production, quality, procurement and the change board.',eq:'formal approval vs informal shortcut reach the same change.'};
+const FAST={name:'fast-food restaurant',in:'ingredients, staff, electricity, customer orders.',thr:'preparing, cooking and assembling the order.',out:'meals served, waste, revenue.',cyc:'revenue pays for ingredients and wages, enabling new meals.',neg:'new customers, training, deliveries, cleaning and maintenance keep order.',fb:'complaints and manager corrections steer quality.',hom:'staffing adjusts to rush hour.',dif:'cashier, kitchen, drive-through roles.',eq:'order via counter, kiosk or app: same result.'};
+const ED={name:'hospital emergency department',in:'patients, staff, medicine, equipment, funding, emergency calls.',thr:'triage, diagnosis, treatment, admission decisions.',out:'treated or discharged patients, records, medical waste.',cyc:'treated patients and insurance payments finance supplies and staff.',neg:'new staff, training, restocking, updated protocols keep order.',fb:'triage coding, vital-sign monitoring, incident reports (data → information → knowledge).',hom:'staffing and beds adjusted to a balanced load.',dif:'triage, trauma, radiology, laboratory, pharmacy.',eq:'ambulance, walk-in or referral reach the same treatment.'};
+const mk=(title,f)=>({title,build:f});
+const PR={
+ open_closed:mk('Open vs closed system',openClosed),
+ anatomy_fac:mk('What is a system? — anatomy (factory)',()=>anatomy({name:'a factory',env:'customers, suppliers, regulators',comps:['Production','Quality','Logistics'],in:'raw material, energy, orders',out:'goods, scrap',purpose:'make goods customers want'})),
+ anatomy_ecm:mk('Boundary and environment — ECM',()=>anatomy({name:'an ECM system',env:'customers, suppliers, regulators',comps:['Change board','Design','Production'],in:'ECRs, complaints',out:'ECOs, updated documents',purpose:'manage engineering changes'})),
+ anatomy_proc:mk('What is a system? — anatomy (procurement)',()=>anatomy({name:'a procurement system',env:'suppliers, management, finance',comps:['Requester','Purchasing','Warehouse'],in:'PRs, budget, quotes',out:'orders, material',purpose:'deliver the right material on time'})),
+ io_factory:mk('Inputs and outputs — Factory',()=>io({name:'a factory',env:'customers, suppliers, regulators',sys:'FACTORY',inputs:['raw material','electricity','workers','customer orders'],outputs:['finished goods','scrap / waste','revenue','delivery data'],fb:'customer complaints and sales data return as information'})),
+ io_canteen:mk('Inputs and outputs — University canteen',()=>io({name:'a university canteen',env:'students, suppliers, university, health rules',sys:'CANTEEN',inputs:['raw food','electricity, water','staff','customer orders'],outputs:['meals','revenue','food waste','customer feedback'],fb:'customer feedback returns and adjusts the menu'})),
+ io_proc:mk('Inputs and outputs — Procurement system',()=>io({name:'a procurement system',env:'suppliers, management, finance',sys:'PROCUREMENT',inputs:['purchase requests (PR)','budget','supplier quotes','management approval'],outputs:['purchase orders','material delivered','goods receipt note','returns'],fb:'returns and inspection results feed back into supplier choice'})),
+ equifin:mk('Equifinality in a procurement system',equifin),
+ cx:mk('Complex vs complicated',cx),
+ sos:mk('System of Systems — Deepwater Coast Guard',sos),
+ reduct:mk('Reductionism and paradigm',reduct),
+ groups3:mk('Three groups of information — Starry Night',groups3),
+ srd_cold:mk('Solve, resolve, dissolve — cold classroom',()=>srd({intro:'solve, resolve and dissolve (cold classroom).',problem:'The classroom|is cold',cards:[['SOLVE','Turn on the heater','(heat the whole building, high cost)'],['RESOLVE','Redefine: maybe one student is ill','→ give a sweater / heat locally (optimum)'],['DISSOLVE','Move to the warm classroom next door','→ zero cost, the problem is gone']]})),
+ srd_queue:mk('Solve, resolve, dissolve — supermarket checkout queues',()=>srd({intro:'solve, resolve and dissolve (long checkout queues).',problem:'Long checkout|queues',cards:[['SOLVE','Open more checkouts / hire more cashiers','(direct solution)'],['RESOLVE','Staff by peak-hour data, mix self-checkout','and manned lanes (best cost vs waiting trade-off)'],['DISSOLVE','Scan-and-go or online order with pick-up','→ there is no checkout queue at all']]})),
+ concurrent_metro:mk('Concurrent engineering — metro extension',()=>concurrent({name:'a metro extension',roles:['Design','Construction','Operations','Safety'],out:'Station design vs train size and signalling interfaces are fixed in design: fewer revisions, faster delivery.'})),
+ concurrent_gen:mk('Concurrent engineering — change process',()=>concurrent({name:'a change process',roles:['Design','Production','Quality','Procurement'],out:'Faster implementation, fewer revision errors, less rework, stronger revision control.'})),
+ dims_gen:mk('Nine dimensions of the systems methodology',()=>dims({ex:[['what is measured, evidence'],['logic of the argument, knowledge'],['deadlines, time to respond'],['habits, politics, behaviour'],['fairness, rights, duty'],['effect on people and society'],['who decides, structure'],['cost, benefit, budget'],['tools and technology available']]})),
+ dims_parking:mk('Nine dimensions — campus parking problem',()=>dims({name:'campus parking',ex:[['measure demand vs capacity'],['evidence for the decision'],['peak 08:30–10:00 shortage'],['habit of driving, informal parking'],['priority: disabled, emergency'],['fairness: staff, students, visitors'],['who decides: admin, security'],['car-park cost vs fees, fines'],['sensors, free-space app, barriers']]})),
+ dims_hosp:mk('Nine dimensions — hospital waiting-time problem',()=>dims({name:'hospital waiting time',ex:[['measure waiting-time data'],['evidence for staffing decisions'],['peak hours, appointment length'],['patient habits, expectations'],['priority for urgent cases'],['fairness, access for the vulnerable'],['triage–lab–ward coordination'],['staff cost vs waiting cost'],['queue information system, records']]})),
+ method_parking:mk('Problem-solving paradigm — campus parking',()=>method({name:'campus parking',sym:'Symptoms:|circling cars,|late students',symTxt:'circling cars, late students',und:'Model demand|vs capacity',undTxt:'demand vs capacity by hour',crit:'Ideal: always a|space or alternative',critTxt:'a space or a good alternative for everyone',opt:'Options: car park,|shuttle, remote class',optTxt:'build, shuttle buses, or remote classes (dissolve)',try:'Pilot in one|area',tryTxt:'pilot permits or shuttle in one car park'})),
+ method_hosp:mk('Problem-solving paradigm — hospital waiting time',()=>method({name:'hospital waiting time',sym:'Symptoms:|long waits,|complaints',symTxt:'long waits, complaints',und:'Model patient|flow',undTxt:'patient flow from triage to ward',crit:'Ideal: triage|within 10 min',critTxt:'triage within 10 minutes',opt:'Options: staffing,|appointments',optTxt:'staffing, appointment system, queue information',try:'Pilot in one|unit',tryTxt:'pilot in the emergency unit'})),
+ method:mk('Combined problem-solving paradigm (systems methodology)',()=>method({})),
+ precepts_bank:mk('13 precepts applied to a bank',()=>precepts({name:'a bank',hints:['loan speed-up moves bottleneck','branch delay → others improvise','fast route small, control big','many customers, one process','trust / bank run emerges','bank inside financial system','reserves and liquidity balanced','survives losing a big client','safe custody, money circulation','what customers actually see','like other service queues','every request flows, no wait','transparency, trust']})),
+ precepts_proc:mk('13 precepts applied to a procurement system',()=>precepts({name:'a procurement system',hints:['speeding purchasing moves bottleneck','unit slows → others pressure','fast route + controlled route','urgent, routine, special requests','delay forms in the arrows','part of the supply chain','level balance of open requests','survive supplier loss, budget cut','right material, on time, at cost','delays and informal routes','like a production line','request flows without waiting','transparency, traceability']})),
+ entropy_univ:mk('Entropy — university and company',()=>entropy({lines:['University: outdated curriculum, lost know-how  vs  new students, R&D funding, new faculty','Company: messy forms, lost motivation  vs  new orders, training, process redesign'],neg:'new students · funding',keep:'curriculum kept current'})),
+ entropy_super:mk('Entropy — supermarket',()=>entropy({label:'SHELF ORDER',closedNote:'no deliveries, no cleaning',decay:'no upkeep → expired stock, empty shelves',neg:'deliveries · restocking · cleaning',keep:'shelves kept in order',lines:['Supermarket entropy: expired stock, empty shelves, misplaced products, messy aisles','Negative entropy: supplier deliveries, restocking, cleaning, staff training, new customers']})),
+ entropy_notes:mk("Entropy — a student's notes folder",()=>entropy({label:'NOTES',closed:'NO upkeep (closed behaviour)',open:'WITH tidying (open behaviour)',closedNote:'no new lectures, no filing',decay:'lost, mixed, outdated notes',neg:'new lectures · corrections',keep:'weekly filing = homeostasis',lines:['Without upkeep: entropy rises, notes get lost and outdated; the system decays','With regular tidying: negative entropy keeps the folder organized; missing notes trigger corrective filing (feedback)']})),
+ entropy_house:mk('Entropy — house/garden and organization',()=>entropy({lines:['Living/physical: house or garden: dust, weeds, rust  vs  cleaning, repair, gardening','Organization: messy forms, lost motivation  vs  new orders, training, clear approval limits']})),
+ money:mk('Money-system questioning (video 1)',money),
+ collins:mk('Brian Collins — INCOSE and three case studies (video 2)',collins),
+ ottino:mk('Julio Ottino — complexity toolbox (video 3)',ottino),
+ ffbd_lib:mk('FFBD — Borrowing a book from a library',()=>ffbd({l1:['Find|book','Check|availability','Register|at desk','Borrow|book','Use|book','Return|book'],a:{i:1,sfx:'AND / OR / Go-No-Go',ref:['Ref. 1.0','Ref. 3.0'],items:['Search|catalog',{and:['Check shelf|status','Check|reservations']},'Confirm copy|available'],gate:{at:2,g:'Go',ng:'No-Go: no copy',alt:['Reserve or|request loan','Choose|another book'],back:0}}})),
+ ffbd_enrol:mk('FFBD — Enrolling in a course',()=>ffbd({l1:['Log in|to system','Search|courses','Check|eligibility','Select|course','Get advisor|approval','Confirm|enrollment'],a:{i:2,sfx:'AND / OR / Go-No-Go',ref:['Ref. 2.0','Ref. 4.0'],items:['Check|prerequisites',{and:['Check|quota','Check schedule|conflict']},'Verify|eligibility'],gate:{at:2,g:'Go',ng:'No-Go: not eligible',alt:['Choose other|course','Join|waiting list'],back:0}},c:{item:1,sub:1,num:'3.3',name:'Check schedule conflict',ref:['Ref. 3.3','Ref. 3.4'],items:['Load current|timetable','Compare|class times','Detect|overlap']}})),
+ ffbd_order:mk('FFBD — Online order (from the text description)',()=>ffbd({l1:['Place|order','Check|stock','Verify|order','Pack|order','Ship|package','Deliver &|close order'],a:{i:2,sfx:'AND + Go/No-Go',ref:['Ref. 2.0','Ref. 4.0'],items:[{and:['Verify|payment','Verify|address']},'Confirm|order'],gate:{at:1,g:'Go',ng:'No-Go: payment failed',rej:'Cancel|order'}},b:{i:4,sfx:'OR',ref:['Ref. 4.0','Ref. 6.0'],items:['Select shipping|method',{or:['Ship by|courier','Ship by|post']},'Record|tracking no.']}})),
+ ffbd_purch:mk('FFBD — Purchasing goods from a supplier',()=>ffbd({l1:['Identify need|& create request','Approve|request','Request|quotations','Evaluate quotes|& select supplier','Issue|order','Receive & inspect|goods','Accept delivery|& close request'],a:{i:1,sfx:'Go / No-Go',ref:['Ref. 1.0','Ref. 3.0'],items:['Review|request','Check|budget','Decide'],gate:{at:2,g:'Go',ng:'No-Go: no budget',rej:'Reject request'}},b:{i:5,sfx:'AND / OR / loop',ref:['Ref. 5.0','Ref. 7.0'],items:['Receive|goods',{and:['Count|quantity','Inspect|quality']},'Decide on|delivery',{or:['Accept full|delivery','Accept short|delivery']}],loop:{at:2,label:'defective',box:'Return goods|to supplier',to:1,sub:1,lbl:'re-inspect'}},c:{item:1,sub:1,num:'6.3',name:'Inspect quality',ref:['Ref. 6.3','Ref. 6.4'],items:['Check|specification','Sample|items','Test|sample','Record|result']}})),
+ layers_univ:mk('5 layers — University',()=>layers({name:'a university',rows:[['L5 — Socio-economic SE','National education policy, law, funding, labour-market needs'],['L4 — Industrial SE','Higher-education sector: high schools, industry, publishers, funders'],['L3 — Business SE','The university as organization: strategy, finance, quality'],['L2 — Project SE','A degree programme or research project: schedule, budget, risk'],['L1 — Product / subsystem SE','The course, curriculum, lab, course material']]})),
+ layers_phone:mk('5 layers — Smartphone',()=>layers({name:'a smartphone',rows:[['L5 — Socio-economic SE','Telecom regulation, privacy law, taxes, e-waste rules'],['L4 — Industrial SE','Electronics supply chain: chips, displays, batteries, assembly, operators'],['L3 — Business SE','The phone company: strategy, finance, marketing, quality'],['L2 — Project SE','Development project of one new model'],['L1 — Product / subsystem SE','Processor, camera, battery, antenna, operating system']]})),
+ layers_metro:mk('5 layers — City metro system',()=>layers({name:'a city metro',rows:[['L5 — Socio-economic SE','Urban transport policy, law, public funding, social needs'],['L4 — Industrial SE','Rail industry: rolling stock, signalling, construction, energy'],['L3 — Business SE','Metro operating authority: strategy, finance, safety'],['L2 — Project SE','Line extension or fleet renewal project'],['L1 — Product / subsystem SE','Trains, tracks, signalling, stations, ticket gates']]})),
+ layers_rail:mk('5 layers — National railway',()=>layers({name:'a national railway',rows:[['L5 — Socio-economic SE','Transport policy, law, funding, safety rules'],['L4 — Industrial SE','Rail industry, suppliers, other transport modes'],['L3 — Business SE','Railway operator: strategy, finance, quality'],['L2 — Project SE','New high-speed line: schedule, budget, risk'],['L1 — Product / subsystem SE','Trains, track, signalling, stations']]})),
+ ms_hosp:mk('Machine Age vs Systems Age — Hospital',()=>ms({sys:'HOSPITAL',parts:['Emergency','Surgery','Laboratory','Pharmacy','Wards'],env:['Environment: health policy, population,','insurance, ambulances, other hospitals'],mission:'Mission: protect public health'})),
+ ms_super:mk('Machine Age vs Systems Age — Supermarket',()=>ms({sys:'SUPERMARKET',parts:['Shelves','Checkout','Warehouse','Logistics','IT'],env:['Environment: customers, suppliers,','competitors, regulation, economy'],mission:'Mission: daily needs, fresh goods, fair prices'})),
+ ms_bus:mk('Machine Age vs Systems Age — City bus service',()=>ms({sys:'BUS SERVICE',parts:['Buses','Drivers','Routes','Stops','Depot'],env:['Environment: passengers, traffic, road works,','weather, municipal policy, other modes'],mission:'Mission: reliable mobility for citizens'})),
+ ms_air:mk('Machine Age vs Systems Age — Airport',()=>ms({sys:'AIRPORT',parts:['Runways','Terminal','Security','Baggage','ATC'],env:['Environment: airlines, passengers,','regulators, weather'],mission:'Mission: safe, on-time node of the network'})),
+ collapse:mk('Collapse loop and concurrent engineering',collapse),
+ open_ecm:mk('Open system (9) — ECM',()=>open9(ECM)),
+ open_fast:mk('Open system (9) — Fast-food restaurant',()=>open9(FAST)),
+ open_ed:mk('Open system (9) — Hospital emergency department',()=>open9(ED)),
+ grt:mk('Geometric Ratio Technique (GRT) pyramid',grt),
+ life_gen:mk('System life cycle',()=>life({cur:4,note:'most systems spend the longest time here'})),
+ life_metro:mk('System life cycle — a 30-year-old metro line',()=>life({cur:4,note:'a 30-year-old line is here; “What is next?” is the management decision'})),
+};
+
+/* ---------- player ---------- */
+function mount(el,name,auto){
+ const p=PR[name];if(!p)return null;
+ const d=p.build(),max=d.steps.length-1;
+ const box=document.createElement('div');box.className='dgc';
+ box.innerHTML=`<div class="dgt">${E(p.title)}</div>${d.svg}<div class="dgb"><button data-a="play">▶ Play</button><button data-a="next">Step →</button><button data-a="reset">↺ Reset</button><span class="dgn"></span></div><div class="dgcap"></div>`;
+ el.appendChild(box);
+ const svg=box.querySelector('svg.dg'),cap=box.querySelector('.dgcap'),no=box.querySelector('.dgn'),pb=box.querySelector('[data-a=play]');
+ let n=0,iv=null;
+ function apply(){svg.querySelectorAll('.st').forEach(g=>{const s=+g.dataset.s;g.classList.toggle('on',s<=n);g.classList.toggle('cur',s===n)});for(let k=1;k<=9;k++)svg.classList.toggle('s'+k,n>=k);cap.textContent=d.steps[n];no.textContent='Step '+n+' / '+max}
+ function stop(){clearInterval(iv);iv=null;pb.textContent='▶ Play'}
+ function play(){stop();if(n>=max)n=0;apply();pb.textContent='⏸ Pause';iv=setInterval(()=>{if(n<max){n++;apply()}else stop()},1700)}
+ pb.onclick=()=>{iv?stop():play()};
+ box.querySelector('[data-a=next]').onclick=()=>{stop();n=n<max?n+1:0;apply()};
+ box.querySelector('[data-a=reset]').onclick=()=>{stop();n=0;apply()};
+ apply();if(auto)play();
+ return{restart(){stop();n=0;apply();play()},stop};
+}
+window.DG={mount,presets:PR};
+})();
+
+</script>
+<script>
+const Q=[
+{id:"q1",t:"Q1 — Definitions and concepts",pts:20,body:`<ul><li>a) Define <b>system boundary</b> and <b>environment</b>. (4)</li><li>b) What is <b>reductionism</b> and why does it fail for complex systems? (4)</li><li>c) What is <b>emergence</b>? Give an example. (4)</li><li>d) What is a <b>System of Systems (SoS)</b>? Give the Deepwater Coast Guard example. (4)</li><li>e) What is a <b>systems methodology</b> and what do its 9 dimensions include? (4)</li></ul>`,
+a:`a) Boundary: the line that separates the system's elements and activities from everything else (e.g. ECM: ECRs, technical evaluation, ECOs, approvals are inside). Environment: everything outside the boundary that exchanges inputs/outputs with the system (customers, suppliers, regulators).
+
+b) Reductionism (Descartes): break big things into smaller understandable parts; if the parts are explained, the whole is explained. It fails for complex systems because some things function only as wholes: the parts do not explain the whole; behaviour comes from the interactions (the arrows), not from the boxes.
+
+c) Emergence: a property or behaviour that none of the parts has and that appears only in the whole. Examples: traffic jam, bird flock with no leader (Ottino), delay forming in the arrows between departments.
+
+d) SoS: a system whose elements are themselves systems, integrated to react to unforeseen circumstances. Deepwater Coast Guard: helicopters, aircraft, cutters, GPS satellite, ground stations, people and computers integrated; key feature is interoperability with local and federal authorities.
+
+e) Systems methodology: the body of methods, rules and postulates used by systems practitioners to investigate, understand and address systems and their problems, and to solve, resolve or dissolve them; the "how" of SE; independent of problem type, so it is a paradigm.
+9 dimensions: scientific; logic and epistemological; time; cultural/political/behavioral; moral and ethical; social; organizational; economic; technological.`},
+{id:"q2",t:"Q2 — Entropy and the nature of problems",pts:10,body:`<ul><li>a) Explain entropy and negative entropy in a <b>supermarket</b>. (5)</li><li>b) A supermarket has long checkout queues. Show how the problem could be <b>solved, resolved and dissolved</b>. (5)</li></ul>`,
+a:`a) Entropy: disorder that grows without upkeep: expired stock, empty shelves, misplaced products, messy aisles, lost staff motivation, outdated prices. Negative entropy: order imported from the environment: supplier deliveries, restocking, cleaning, staff training, new customers and revenue, information from barcode/inventory systems. Without them the supermarket decays and stops.
+
+b) Solved: open more checkouts / hire more cashiers (direct solution).
+Resolved: re-solve for the optimum: staff according to peak-hour data, mix of self-checkout and manned lanes (best trade-off of cost and waiting time).
+Dissolved: remove the problem itself: scan-and-go / cashierless shopping, or online ordering with pick-up, so queues no longer exist.`},
+{id:"q3",t:"Q3 — Five layers",pts:20,body:`Build the five-layer system model for a <b>smartphone</b> (product, company, industry, society). Name what belongs in each layer. Then explain (i) the direction of flows between the layers and (ii) which layer you consider the most critical and why.`,
+a:`L5 Socio-economic SE: telecom regulation, privacy law, import taxes, standards (e.g. radio spectrum, e-waste rules), consumer culture, national wealth creation
+L4 Industrial SE: the electronics industry and supply chain: chip fabs, display makers, battery suppliers, assembly plants, network operators, retail; products flow supplier → customer, demand flows back
+L3 Business SE: the phone company: strategy, finance, marketing, quality, brand, product portfolio
+L2 Project SE: development project of one new model: schedule, budget, team, risk, concurrent engineering of hardware, software and manufacturing
+L1 Product/subsystem SE: the phone and its subsystems: processor, camera, battery, antenna, operating system (the innovative artifact)
+
+(i) Flows: upper layers constrain lower ones (regulation → industry standards → company strategy → project → device specs); lower layers feed upper ones (good product → company revenue → industrial and national wealth). In L4, product flows toward the customer and demand (orders) flows back the opposite way.
+(ii) Any layer is acceptable if argued: e.g. L4 because a supplier failure (chip shortage) stops the whole chain, or L5 because regulation defines what may be built. Mention that a solution in L1 is proven by neutralizing the symptoms.
+
+Marking: five layers correct 10; flows 5; critical-layer argument 3; example consistency 2.`},
+{id:"q4",t:"Q4 — Machine Age vs Systems Age",pts:20,body:`<ul><li>a) State the key difference between the Machine Age and Systems Age approaches in terms of method, question asked and type of knowledge produced. (6)</li><li>b) Analyze a <b>supermarket</b> using the Machine Age approach, then using the Systems Age approach. (10)</li><li>c) Which approach would you use for a complex system and why? (4)</li></ul>`,
+a:`a) Method: Machine Age = analysis (decompose, explain parts, aggregate); Systems Age = synthesis (environment → mission → behaviour). Question: HOW does it work? vs WHY does it exist? Knowledge: Machine Age accumulates descriptions; synthesis yields knowledge.
+
+b) Machine Age: (1) parts: shelves/aisles, checkout, warehouse, logistics, staff, IT, finance; (2) explain each: shelf space, checkout speed, stock level, delivery frequency; (3) aggregate: if each part is efficient, the supermarket is efficient. Limit: misses interactions (stock-outs caused by delayed information between checkout data and the warehouse).
+Systems Age: (1) environment: customers, neighbourhood, suppliers, competitors, regulation, economy; (2) mission: supply the community's daily needs with fresh goods at fair prices; (3) explain behaviour from that role: opening hours, product range, prices, queues judged by how they serve the mission and the flows between units (demand → restocking → supplier).
+
+c) Systems Age, because complex systems show emergent behaviour that the parts do not explain; problems form in the relationships; optimizing one part (sub-optimization) can harm the whole.`},
+{id:"q5",t:"Q5 — Block diagram (FFBD)",pts:20,body:`Draw an FFBD for <b>"Enrolling in a course"</b> on paper.<ul><li>Level 1 with 6 blocks (numbered 1.0–6.0).</li><li>Expand block 3.0 into Level 2 containing an AND, an OR and a Go/No-Go.</li><li>Expand one Level 2 block into Level 3.</li><li>Use verb + object text and Ref. blocks, and link levels with dashed lines.</li></ul>List your blocks in the text box, then compare.`,
+a:`Level 1:
+1.0 Log in to system → 2.0 Search courses → 3.0 Check eligibility → 4.0 Select course → 5.0 Get advisor approval → 6.0 Confirm enrollment
+
+Level 2 of block 3.0:
+[Ref. 2.0 Search courses] → 3.1 Check prerequisites → (AND) 3.2 Check quota + 3.3 Check schedule conflict → 3.4 Verify eligibility
+   G → [Ref. 4.0 Select course]
+   G-bar → (OR) 3.5 Choose alternative course / 3.6 Join waiting list → back to 3.1
+
+Level 3 of block 3.3:
+[Ref. 3.3 Check schedule conflict] → 3.3.1 Load current timetable → 3.3.2 Compare class times → 3.3.3 Detect overlap → [Ref. 3.4 Verify eligibility]
+
+Dashed lines from 3.0 down to Level 2 and from 3.3 down to Level 3, with "~" under the expanded blocks.
+
+Marking: Level 1 correct 5; numbering and verb+object 4; Ref. blocks 3; AND 2; OR 2; Go/No-Go 2; Level 3 2.`},
+{id:"q6",t:"Q6 — Precepts and collapse",pts:10,body:`<ul><li>a) Apply any FIVE of the 13 system precepts to a <b>bank</b> (1 pt each). (5)</li><li>b) Explain the collapse loop (cohesion vs dispersive influences) and how concurrent engineering reduces the risk. (5)</li></ul>`,
+a:`a) Examples:
+Holism: speeding up loan approval alone moves the bottleneck to risk or legal.
+Organicism: when one branch slows, others react with pressure and workarounds.
+Synthesis: customers want fast service, regulators want control, so a fast route for small transactions and a controlled route for large ones.
+Variety: many customer types and products going through the same process.
+Emergence: customer trust or a bank run emerges from many individual decisions.
+Homeostasis: reserve requirements and liquidity management keep the system balanced.
+Viability: survives losing a large client or a market shock.
+Purpose: safe custody and circulation of money. Values: transparency, trust. Ideal system: every request flows without waiting.
+
+b) Collapse loop: dispersive influences → cohesion falls → breakdown → variety generation → more dispersive influences (positive feedback). Example: USSR domino. In an organization, departments acting independently create chaos, errors and blame, and the process collapses. Concurrent engineering puts all functions at the same table from the start, solves problems early in design (front-loading), and thus increases cohesion, giving fewer revision errors and less rework.`},
+{id:"qb",t:"Bonus — Paradigm and information groups",pts:5,bonus:true,body:`Explain the three groups of information in the Starry Night example and how they enlarge the solution space.`,
+a:`Group 1: WHAT? What is seen, placed, known, said: one axis X. Group 2: WHERE? Where the painter is standing: second axis Y, a plane; the paradigm change starts here. Group 3: WHO? Who took/painted the picture: culture, civilization, identity, belonging: third axis Z. Each new viewpoint multiplies the solution set (e.g. 2×3 = 6 solutions), so a paradigm shift changes both the problem and the solution. Every problem is a product of a paradigm.`}
+];
+const DGMAP={"q1": ["anatomy_ecm", "reduct", "sos", "dims_gen"], "q2": ["entropy_super", "srd_queue"], "q3": ["layers_phone"], "q4": ["ms_super"], "q5": ["ffbd_enrol"], "q6": ["precepts_bank", "collapse", "concurrent_gen"], "qb": ["groups3"]};const DGM={};
+function showDG(id,on){const g=document.getElementById("g_"+id);if(!g)return;g.style.display=on?"block":"none";const list=DGMAP[id]||[];if(!list.length||!window.DG)return;if(!DGM[id]){DGM[id]=list.map(k=>DG.mount(g,k,true))}else DGM[id].forEach(c=>{if(c)on?c.restart():c.stop()})}
+const KEY="ie471_mock_en_set2_v1";
+let S={};try{S=JSON.parse(localStorage.getItem(KEY)||"{}")}catch(e){}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+S.ans=S.ans||{};S.sc=S.sc||{};
+const $=id=>document.getElementById(id);
+const box=$("qs");
+Q.forEach(q=>{
+ const d=document.createElement("div");d.className="q";d.id=q.id;
+ d.innerHTML=`<h2>${q.t} <span class="pts">${q.pts} pts${q.bonus?" (bonus)":""}</span></h2><div>${q.body}</div>
+ <textarea id="t_${q.id}" placeholder="Your answer..."></textarea>
+ <div class="row"><button data-r="${q.id}">Show model answer</button><label>My score: <input type="number" min="0" max="${q.pts}" id="s_${q.id}"> / ${q.pts}</label></div>
+ <div class="ans" id="a_${q.id}"></div>
+ <div class="dgs" id="g_${q.id}" style="display:none"></div>`;
+ box.appendChild(d);
+ $("a_"+q.id).textContent=q.a;
+ const ta=$("t_"+q.id);ta.value=S.ans[q.id]||"";
+ ta.oninput=()=>{S.ans[q.id]=ta.value;save()};
+ const si=$("s_"+q.id);if(S.sc[q.id]!==undefined)si.value=S.sc[q.id];
+ si.oninput=()=>{let v=parseFloat(si.value);if(isNaN(v))delete S.sc[q.id];else S.sc[q.id]=Math.max(0,Math.min(q.pts,v));save();total()};
+ d.querySelector("[data-r]").onclick=e=>{const a=$("a_"+q.id);a.classList.toggle("show");const on=a.classList.contains("show");e.target.textContent=on?"Hide model answer":"Show model answer";showDG(q.id,on)};
+});
+function total(){
+ let main=0,bonus=0;
+ Q.forEach(q=>{const v=S.sc[q.id]||0;if(q.bonus)bonus+=v;else main+=v});
+ $("score").textContent="Score: "+main+" / 100"+(bonus?" (+"+bonus+" bonus)":"");
+ return [main,bonus];
+}
+total();
+$("finish").onclick=()=>{
+ const [m,b]=total(),t=m+b;
+ let msg=t>=85?"Ready. Practise drawing FFBDs faster.":t>=65?"Revise the 9 characteristics, 13 precepts and 5 layers.":"Redo the flashcards (Definitions, Week 2, Machine vs Systems, FFBD), then retake.";
+ const r=$("res");r.classList.add("show");r.innerHTML=`<b>Result: ${m} / 100${b?" (+"+b+" bonus)":""}</b><br>${msg}`;
+ r.scrollIntoView({behavior:"smooth"});
+};
+$("clear").onclick=()=>{if(!confirm("Clear all answers and scores?"))return;S={ans:{},sc:{}};save();location.reload()};
+let left=90*60,iv=null;
+function draw(){const m=Math.floor(left/60),s=left%60;const el=$("timer");el.textContent=String(m).padStart(2,"0")+":"+String(s).padStart(2,"0");el.classList.toggle("low",left<600)}
+draw();
+$("start").onclick=()=>{if(iv)return;iv=setInterval(()=>{left--;draw();if(left<=0){clearInterval(iv);iv=null;alert("Time is up!")}},1000)};
+$("pause").onclick=()=>{clearInterval(iv);iv=null};
+</script>
+<a class="homebtn" href="index.html?v=5" style="position:fixed;left:12px;bottom:12px;z-index:50;padding:8px 14px;border-radius:999px;background:var(--card,#fff);color:var(--ink,#1d1d1b);border:1px solid var(--line,#dcdad2);box-shadow:0 2px 8px rgba(0,0,0,.18);font:600 14px system-ui,Segoe UI,sans-serif;text-decoration:none">← Home</a>
+<script src="../theme.js?v=5"></script>
+<script data-goatcounter="https://ackfreak.goatcounter.com/count" async src="https://gc.zgo.at/count.js"></script>
+</body>
+</html>

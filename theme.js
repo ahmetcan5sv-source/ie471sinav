@@ -5,8 +5,8 @@ var LIGHT='--bg:#f6f5f1;--card:#fff;--ink:#1d1d1b;--mut:#6b6a65;--acc:#2f5fd0;--
 var st=document.createElement('style');
 st.textContent='html[data-theme="dark"]{'+DARK+';color-scheme:dark}html[data-theme="light"]{'+LIGHT+';color-scheme:light}';
 document.head.appendChild(st);
-var KEY='ie471_theme';
-function get(){try{return localStorage.getItem(KEY)}catch(e){return null}}
+var KEY='prep_theme';
+function get(){try{return localStorage.getItem(KEY)||localStorage.getItem('ie471_theme')}catch(e){return null}}
 function put(v){try{localStorage.setItem(KEY,v)}catch(e){}}
 function sys(){return window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'}
 var tr=(document.documentElement.lang||'').toLowerCase()==='tr';
