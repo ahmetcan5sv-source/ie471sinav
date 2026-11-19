@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>IE407 Kavram Seti 2</title>
+<style>
+:root{--bg:#f6f5f1;--card:#fff;--ink:#1d1d1b;--mut:#6b6a65;--acc:#2f5fd0;--ok:#1f8a4c;--no:#c0392b;--line:#dcdad2;--soft:#eef2fc}
+@media (prefers-color-scheme:dark){:root{--bg:#161615;--card:#222221;--ink:#eeede8;--mut:#a09f98;--acc:#7da2ff;--ok:#4cc27d;--no:#ef7a6d;--line:#3a3a38;--soft:#1f2636}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 system-ui,Segoe UI,sans-serif}
+.wrap{max-width:820px;margin:0 auto;padding:16px 16px 80px}
+.back{display:inline-block;color:var(--acc);text-decoration:none;font-size:14px;font-weight:600}
+h1{font-size:22px;margin:8px 0 4px}
+h2{font-size:18px;margin:26px 0 8px;padding-bottom:4px;border-bottom:2px solid var(--line)}
+.sub{color:var(--mut);margin-bottom:12px}
+.top{position:sticky;top:0;z-index:5;background:var(--bg);padding:10px 0;border-bottom:1px solid var(--line);display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.score{font-weight:700;font-size:18px}
+.spacer{flex:1}
+button{font:inherit;padding:8px 14px;border-radius:8px;border:1px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer}
+button.p{background:var(--acc);color:#fff;border-color:var(--acc)}
+.it{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin:12px 0;scroll-margin-top:80px}
+.it .no{color:var(--acc);font-weight:700;font-size:13px;margin-bottom:2px}
+.it .q{font-size:16.5px}
+.row{display:flex;gap:10px;margin-top:10px;flex-wrap:wrap;align-items:center}
+.btn-tf{min-width:110px}
+.btn-tf.sel{outline:3px solid var(--acc)}
+.res{display:none;margin-top:10px;border-radius:8px;padding:10px 14px}
+.res.show{display:block}
+.res.ok{background:rgba(31,138,76,.12);border-left:4px solid var(--ok)}
+.res.bad{background:rgba(192,57,43,.12);border-left:4px solid var(--no)}
+.res .h{font-weight:700;margin-bottom:4px}
+.res.ok .h{color:var(--ok)} .res.bad .h{color:var(--no)}
+.res .why{font-family:"Latin Modern Roman",Cambria,Georgia,"Times New Roman",serif;font-size:16.5px}
+.res .fix{margin-top:6px;font-weight:600}
+.blank{width:140px;font:inherit;padding:4px 8px;border-radius:6px;border:1px solid var(--line);background:var(--bg);color:var(--ink);margin:0 2px}
+.blank.ok{border-color:var(--ok);background:rgba(31,138,76,.12)} .blank.bad{border-color:var(--no);background:rgba(192,57,43,.12)}
+.legend{font-size:13px;color:var(--mut)}
+</style>
+</head>
+<body>
+<div class="wrap">
+<a class="back" href="index.html">← IE407</a>
+<h1>Kavram Seti 2: Kapsama ve center modelleri</h1>
+<div class="sub">Servis standardı, set covering, MCLP, p-center ve eşik yöntemi. 26 Doğru/Yanlış ve 14 boşluk doldurma sorusu. Her cevaptan sonra <b>neden</b> açıklaması açılır. İlerleme tarayıcında saklanır.</div>
+<div class="top"><span class="score" id="score">Doğru: 0 / 0</span><span class="legend" id="prog"></span><span class="spacer"></span><button id="reset">Sıfırla</button></div>
+<h2>Doğru / Yanlış (26)</h2>
+<div id="tf"></div>
+<h2>Boşluk doldurma (14)</h2>
+<div id="fb"></div>
+<p class="sub" style="margin-top:20px">Boşluklarda küçük/büyük harf, Türkçe karakter ve boşluk farkları önemsenmez; birden çok kabul edilen yazım vardır. Açıklamalar ders slaytlarına dayanır.</p>
+</div>
+<script>
+const IT=[{"t": "tf", "q": "Kapsama modellerinde kullanılan d_ij, ham kenar uzunluğu değil, en kısa yol mesafesidir.", "a": true, "why": "İki düğüm arasında doğrudan kenar olmayabilir ya da dolaşık yol daha kısa olabilir. Matris, bir en kısa yol algoritmasının (Floyd gibi) çıktısıdır; tüm modeller bu matrisi varsayar.", "fix": ""}, {"t": "tf", "q": "Kapsama matrisinde a_ij = 1 olması için d_ij ≤ R olması gerekir.", "a": true, "why": "j'deki tesis i'yi kapsar ancak i ile j arası süre/mesafe standart R'yi aşmıyorsa. 7,9 dk tam kapsanmış, 8,1 dk hiç kapsanmamış sayılır: tüm-ya-da-hiç.", "fix": ""}, {"t": "tf", "q": "Bir düğümün kapsama kümesi N_i tek elemanlıysa, o site her tam kapsama çözümünde yer almak zorundadır.", "a": true, "why": "N_i = {j} ise i'yi R içinde kapsayabilecek tek site j'dir; i kapsanacaksa j seçilmelidir. Bu yüzden önce tek elemanlı kümeler aranır (zorunlu karar).", "fix": ""}, {"t": "tf", "q": "Standart \"çağrıdan itibaren 8 dakika\" ve çağrı karşılama + hazırlık gecikmesi 1,5 dk ise modelde R = 8 dk alınmalıdır.", "a": false, "why": "Sabit gecikmeler standarttan düşülür: R = 8 − 1,5 = 6,5 dk. Yoksa gerçek yanıt süresi sözü aşar. Birçok kapsama çalışması bu yüzden yanlıştır.", "fix": "Doğrusu: R = 8 − 1,5 = 6,5 dk."}, {"t": "tf", "q": "Kapsama modellerinde kilometre kullanmak bir düğümü \"kapsanmış\"tan \"kapsanmamış\"a çevirebilir.", "a": true, "why": "Söz dakika cinsinden verilmişse süre = mesafe/hız ilişkisi yola göre değişir (şehir içi 3 km ≈ 11 dk, otoyol 12 km ≈ 9 dk). km kullanmak eşiğin yanlış tarafına düşürür ve hata ikili, denetlenebilir olur.", "fix": ""}, {"t": "tf", "q": "p-center amacı, tesislerden müşterilere en kötü (en uzun) mesafeyi minimize etmektir.", "a": true, "why": "p-center minimax'tır: min over S max over i d(i,S). İç max, bir çözümde en çok kim bekliyor; dış min, hangi çözümde bu en kısa.", "fix": ""}, {"t": "tf", "q": "p-center, ağırlıklı toplam mesafeyi minimize eder.", "a": false, "why": "Toplamı minimize eden model p-median'dır. p-center yalnız en kötü durumdaki müşteriye bakar ve ağırlık kullanmaz.", "fix": "Doğrusu: p-center = en kötü mesafeyi minimize eder."}, {"t": "tf", "q": "p-center, kapsama mesafesi R üzerinde ikili arama yaparak ve her adımda set covering çözerek bulunabilir (eşik hilesi).", "a": true, "why": "R'nin adayları matristeki farklı mesafe değerleridir. Her R için \"p tesis herkesi R içinde kapsayabilir mi?\" bir set covering sorusudur; en küçük \"evet\" R, p-center değeridir. Minimax modeline göre çok daha pratiktir.", "fix": ""}, {"t": "tf", "q": "p-center modelinde x_ij ikili olmak zorunda değildir; p-median gibi sürekli bırakılabilir.", "a": false, "why": "Minimax hedefinde bir müşteriyi iki tesise bölüp ortalama süre göstererek W kısıtı \"kandırılabilir\". p-median'daki köşe argümanı çalışmaz, x_ij ikili olmak zorundadır.", "fix": "Doğrusu: p-center'da x_ij ikili olmalıdır."}, {"t": "tf", "q": "Hakimi teoremi (optimum düğümlerde vardır) p-center için de geçerlidir.", "a": false, "why": "Hakimi teoremi minisum (median) içindir; kenar üzerinde hedef içbükeydir. Center'da max içeren hedef içbükeylik bozar; optimum kenar ortasında olabilir.", "fix": "Doğrusu: Center için geçerli değildir; kenar ortası daha iyi olabilir."}, {"t": "tf", "q": "Set covering (LSCP) amacı tesis sayısıdır; mesafe amaç fonksiyonunda yer almaz.", "a": true, "why": "min Σ y_j. Model bir müşterinin 1 dakikada mı 5,9 dakikada mı kapsandığına bakmaz; ikisi de \"kapsanmış\"tır. Mesafe yalnız a_ij matrisinin kurulmasında kullanılır.", "fix": ""}, {"t": "tf", "q": "Set covering ile p-center aynı problemin iki yüzüdür: biri p'yi, diğeri R'yi sabitler.", "a": true, "why": "p-center: p sabit, min R. Set covering: R sabit, min p. Aynı (p,R) tablosunu iki yönden okurlar: \"3 istasyonla en iyi söz 6 dk\" ⇔ \"6 dk sözü için 3 istasyon\".", "fix": ""}, {"t": "tf", "q": "Set covering'de N_k ⊆ N_i ise N_i satırı gereksizdir ve elenebilir.", "a": true, "why": "N_k'yı sağlayan her çözüm, onun üst kümesi N_i'yi de sağlar. Bu yüzden büyük küme satırı atılır; domine siteler ise (kapsama kümesi başka sitenin alt kümesi) sütundan atılır.", "fix": ""}, {"t": "tf", "q": "Greedy set covering her zaman optimum çözümü verir.", "a": false, "why": "Karşı örnek: 4 ilçe, A={1,2}, B={1,3}, C={2,4}. Greedy önce A'yı seçer, 3 ve 4 için B ve C gerekir (3 site); optimum B+C (2 site). En kötü durumda optimumdan yaklaşık ln n kat kötü olabilir.", "fix": "Doğrusu: Greedy üst sınır verir, optimum garantisi yoktur."}, {"t": "tf", "q": "MCLP'de z_i ≤ Σ_{j∈N_i} y_j kısıtı z_i'yi 1'e zorlamaz; hedef z_i'yi yukarı iter.", "a": true, "why": "Kısıt yalnız tavan koyar: kapsayan site yoksa z_i = 0 olmak zorunda. Hedef maksimizasyon ve h_i > 0 olduğu için çözücü izin verilen her yerde z_i = 1 yapar.", "fix": ""}, {"t": "tf", "q": "MCLP toplam kapsanan talebi maksimize ettiği için küçük ve uzak nüfusları ilk feda etme eğilimindedir.", "a": true, "why": "Verimli ama adil olmayan bir modeldir: kapsanmayanlar hedef değerde görünmez. Çözüm: kapsanmayanı isimle raporla ve R_max kısıtı ekle (hiçbir düğüm R_max'tan uzak olmasın).", "fix": ""}, {"t": "tf", "q": "Kapsama eğrisi (kapsanan talep yüzdesi – tesis sayısı) içbükey olmalıdır; değilse veri hatası şüphesi vardır.", "a": true, "why": "Yoğun ilçeler önce kapsandığından kazanç azalan getirilidir: ilk istasyon çok, sonrakiler az kazandırır. İçbükey olmayan bir eğri çoğunlukla veri hatasına işaret eder.", "fix": ""}, {"t": "tf", "q": "R sabitse model covering ailesine, p sabitse center/median ailesine yönelir.", "a": true, "why": "Dört soru: R sabit mi (covering) yoksa p mi (center)? Tam kapsamayı karşılayabilir misin (LSCP) yoksa bütçe mi (MCLP)? Kim kime gidiyor? Herkes eşit mi (ağırlık)?", "fix": ""}, {"t": "tf", "q": "Bütçe p tesise sınırlıysa ve R standardı bu p ile sağlanamıyorsa LSCP bize en iyi kapsamayı verir.", "a": false, "why": "LSCP \"herkes R içinde olsun\" der; p yetmiyorsa model **olursuz** olur ve durur. \"p ile en çok kimi koruyabilirim?\" sorusunu MCLP cevaplar.", "fix": "Doğrusu: Bu durumda MCLP kullanılır."}, {"t": "tf", "q": "p-center çözümlerinde beraberlik (aynı en kötü değere sahip çok sayıda çözüm) nadirdir.", "a": false, "why": "Hedef yalnızca tek bir ilçeye (bağlayıcı ilçe) bağlı olduğu için beraberlik çok olur. İkincil bir ölçüt (ortalama süre) hesaplayıp beraberliği açıkça raporlamak gerekir.", "fix": "Doğrusu: Beraberlik çok sık görülür."}, {"t": "tf", "q": "Set covering'de sözün fiyatı R değiştikçe sürekli değil, basamak basamak değişir.", "a": true, "why": "Örnekte R=4: 6, R=5: 4, R=6: 3, R=8: 2, R=15: 1 istasyon. Standart bir basamağın hemen altındaysa küçük bir gevşetme çok değerli, küçük bir sıkılaştırma çok pahalıdır.", "fix": ""}, {"t": "tf", "q": "MCLP'de greedy-add, optimumun en az (1 − 1/e) ≈ %63'ünü garanti eder.", "a": true, "why": "Kapsama fonksiyonu alt modülerdir; greedy bu klasik garantiyi sağlar. Pratikte genelde birkaç yüzde yakındır ama büyük işlerde çözücüyle doğrulanmalıdır.", "fix": ""}, {"t": "tf", "q": "MCLP sonucunda kapsanmayan talebi raporlamak gerekmez, çünkü amaç değeri zaten gösterir.", "a": false, "why": "Amaç yalnız kapsananı gösterir; kapsanmayan (ör. \"7. ilçedeki 20 bin kişi 11 dk bekleyecek\") hiçbir yerde görünmez. Raporda isimle söylenmelidir.", "fix": "Doğrusu: Kimin dışarıda kaldığı mutlaka söylenir."}, {"t": "tf", "q": "Domine site, kapsadığı küme başka bir sitenin kapsadığı kümenin üst kümesi olan sitedir.", "a": false, "why": "Domine site, kapsadığı kümenin başka bir sitenin kümesinin **alt kümesi** olduğu sitedir; onu seçmek hiçbir şey kazandırmaz, o yüzden sütunu atılır.", "fix": "Doğrusu: Domine = kümesi başka bir kümenin alt kümesi."}, {"t": "tf", "q": "Standart R sıkılaştırıldığında (küçültüldüğünde) set covering için gereken tesis sayısı azalır.", "a": false, "why": "R küçülünce kapsama kümeleri küçülür; daha çok tesis gerekir (ya da aynı kalır). Örnekte R = 6 → 3, R = 5 → 4, R = 4 → 6 istasyon.", "fix": "Doğrusu: R küçüldükçe gereken tesis sayısı artar (azalmaz)."}, {"t": "tf", "q": "p-center değeri, p arttıkça artar.", "a": false, "why": "Daha çok tesis, en kötü müşteriyi yakınlaştırır: p-center değeri azalır ya da aynı kalır (örnekte 15, 8, 6, 5, 5).", "fix": "Doğrusu: p arttıkça azalır (azalan getiriyle)."}, {"t": "fill", "q": "Kapsama matrisinde a_ij = 1 ancak d_ij ___ R ise.", "ans": [["≤", "<=", "küçük eşit", "küçük veya eşit", "kucuk esit", "kucuk veya esit"]], "why": "j'deki tesis i'yi R içinde kapsar."}, {"t": "fill", "q": "N_i = { j : a_ij = ___ }, i'yi kapsayan sitelerin kümesidir.", "ans": [["1", "bir"]], "why": "Kapsama matrisinin i satırındaki 1'ler kapsama kümesini verir."}, {"t": "fill", "q": "N_i tek elemanlıysa o site çözümde ___ yer alır.", "ans": [["mutlaka", "zorunlu", "zorunlu olarak", "kesinlikle"]], "why": "Tek aday site olduğu için seçilmek zorundadır; önce tek elemanlı kümeler aranır."}, {"t": "fill", "q": "Standart çağrıdan itibaren 8 dk ve sabit gecikme 1,5 dk ise modelde R = ___ dk alınır.", "ans": [["6,5", "6.5"]], "why": "Sabit gecikme standarttan düşülür: 8 − 1,5 = 6,5."}, {"t": "fill", "q": "p-center: min over S ___ over i d(i,S).", "ans": [["max", "maks", "maksimum"]], "why": "İç max en kötü müşteriyi bulur, dış min onu küçültür (minimax)."}, {"t": "fill", "q": "p-center, ___ hilesiyle set covering üzerinden ikili aramayla çözülebilir.", "ans": [["eşik", "esik"]], "why": "Farklı mesafe değerleri üzerinde ikili arama; her adım bir set covering fizibilite testi."}, {"t": "fill", "q": "Ağırlıklı set covering (farklı arsa maliyeti) için hedef: min Σ ___ y_j.", "ans": [["f_j", "fj", "f", "f j"]], "why": "Hedefte tesis sayısı yerine sabit maliyetler: min Σ f_j y_j; kısıtlar aynıdır."}, {"t": "fill", "q": "MCLP hedefi: max Σ h_i ___ ; z_i = i kapsandı mı göstergesidir.", "ans": [["z_i", "zi", "z"]], "why": "z_i ≤ Σ_{j∈N_i} y_j ile bağlıdır."}, {"t": "fill", "q": "Greedy set covering, en kötü durumda optimumdan yaklaşık ln ___ kat kötü olabilir.", "ans": [["n"]], "why": "n: kapsanacak düğüm sayısı. Pratikte genelde bir iki site fazladır."}, {"t": "fill", "q": "MCLP'de greedy-add garantisi: optimumun en az (1 − 1/___)'si.", "ans": [["e"]], "why": "(1 − 1/e) ≈ 0,63: alt modüler fonksiyon maksimizasyonunun klasik sonucu."}, {"t": "fill", "q": "p-center modelinde x_ij ___ (ikili / sürekli) olmak zorundadır.", "ans": [["ikili", "binary", "0/1", "0-1"]], "why": "Aksi halde bir müşteri iki tesise bölünüp W kısıtı kandırılabilir."}, {"t": "fill", "q": "p-center ile set covering birbirinin ___ olarak da düşünülebilir: biri p'yi, diğeri R'yi sabitler.", "ans": [["aynası", "ayna", "tersi", "mirror", "karşılığı"]], "why": "Aynı (p,R) tablosunu iki yönden okurlar."}, {"t": "fill", "q": "Ortak sitesi olmayan (ayrık) N_i kümelerine sahip k düğüm varsa en az ___ tesis gerekir.", "ans": [["k"]], "why": "Her biri farklı bir tesisle kapanmak zorundadır; ayrık kümelerin sayısı hızlı bir alt sınırdır."}, {"t": "fill", "q": "Tüm-ya-da-hiç kapsamanın yapaylığını azaltan, kapsamanın R'den R_max'a yumuşak düştüğü varyanta ___ kapsama denir.", "ans": [["kademeli", "gradual", "decay", "yumuşak", "kademeli (gradual)"]], "why": "Kademeli (gradual/decay) kapsama; 8,1 dk'nın 7,9 dk kadar iyi olabildiği durumlarda gereklidir."}];
+const KEY="ie407_kavram2_v1";
+let S={};try{S=JSON.parse(localStorage.getItem(KEY)||"{}")}catch(e){}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+const $=id=>document.getElementById(id);
+function norm(s){
+ return (s||"").toLocaleLowerCase("tr").replace(/[çğıöşü]/g,c=>({"ç":"c","ğ":"g","ı":"i","ö":"o","ş":"s","ü":"u"})[c]).replace(/[\s'"’‘`·.]/g,"").replace(/,/g,".").replace(/%/g,"");
+}
+function okBlank(v,acc){const n=norm(v);return acc.some(a=>norm(a)===n)}
+function esc(s){return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")}
+let nTF=0,nFB=0;
+IT.forEach((it,idx)=>{
+ const d=document.createElement("div");d.className="it";d.id="i"+idx;
+ if(it.t==="tf"){
+  nTF++;
+  d.innerHTML=`<div class="no">D/Y ${nTF}</div><div class="q">${esc(it.q)}</div>
+  <div class="row"><button class="btn-tf" data-v="1">Doğru</button><button class="btn-tf" data-v="0">Yanlış</button></div>
+  <div class="res" id="r${idx}"></div>`;
+  $("tf").appendChild(d);
+  d.querySelectorAll(".btn-tf").forEach(b=>b.onclick=()=>{S["a"+idx]=b.dataset.v==="1"?1:0;save();showTF(idx);upd()});
+ }else{
+  nFB++;
+  let k=0;
+  const html=esc(it.q).replace(/___/g,()=>`<input class="blank" data-k="${k++}" id="b${idx}_${k-1}" autocomplete="off">`);
+  d.innerHTML=`<div class="no">Boşluk ${nFB}</div><div class="q">${html}</div>
+  <div class="row"><button class="p" data-c="${idx}">Kontrol et</button></div>
+  <div class="res" id="r${idx}"></div>`;
+  $("fb").appendChild(d);
+  d.querySelectorAll(".blank").forEach(inp=>{inp.value=(S["f"+idx]||[])[inp.dataset.k]||"";inp.oninput=()=>{S["f"+idx]=S["f"+idx]||[];S["f"+idx][inp.dataset.k]=inp.value;save()};inp.onkeydown=e=>{if(e.key==="Enter")d.querySelector("[data-c]").click()}});
+  d.querySelector("[data-c]").onclick=()=>{
+   const vals=[...d.querySelectorAll(".blank")].map(i=>i.value);
+   S["f"+idx]=vals;S["c"+idx]=1;save();showFB(idx);upd();
+  };
+ }
+});
+function showTF(idx){
+ const it=IT[idx],chosen=S["a"+idx];if(chosen===undefined)return;
+ const correct=(chosen===1)===it.a;
+ const r=$("r"+idx);r.className="res show "+(correct?"ok":"bad");
+ r.innerHTML=`<div class="h">${correct?"✔ Doğru cevap":"✘ Yanlış cevap"} (doğrusu: ${it.a?"Doğru":"Yanlış"})</div><div class="why">${esc(it.why)}</div>${it.fix?`<div class="fix">${esc(it.fix)}</div>`:""}`;
+ document.querySelectorAll("#i"+idx+" .btn-tf").forEach(b=>b.classList.toggle("sel",(b.dataset.v==="1"?1:0)===chosen));
+}
+function showFB(idx){
+ if(!S["c"+idx])return;
+ const it=IT[idx],vals=S["f"+idx]||[];
+ let all=true;
+ it.ans.forEach((acc,k)=>{
+  const inp=$("b"+idx+"_"+k);const ok=okBlank(vals[k]||"",acc);if(!ok)all=false;
+  inp.classList.remove("ok","bad");inp.classList.add(ok?"ok":"bad");inp.value=vals[k]||"";
+ });
+ const r=$("r"+idx);r.className="res show "+(all?"ok":"bad");
+ r.innerHTML=`<div class="h">${all?"✔ Hepsi doğru":"✘ Eksik / yanlış var"}</div><div>Kabul edilen cevap(lar): ${it.ans.map((a,k)=>`<b>${k+1})</b> ${a.map(esc).join(" / ")}`).join(" &nbsp; ")}</div><div class="why" style="margin-top:6px">${esc(it.why)}</div>`;
+}
+function isCorrect(idx){
+ const it=IT[idx];
+ if(it.t==="tf"){const c=S["a"+idx];return c!==undefined&&((c===1)===it.a)}
+ if(!S["c"+idx])return false;
+ const vals=S["f"+idx]||[];return it.ans.every((acc,k)=>okBlank(vals[k]||"",acc));
+}
+function answered(idx){return IT[idx].t==="tf"?S["a"+idx]!==undefined:!!S["c"+idx]}
+function upd(){
+ let ok=0,done=0;IT.forEach((it,i)=>{if(answered(i)){done++;if(isCorrect(i))ok++}});
+ $("score").textContent="Doğru: "+ok+" / "+IT.length;
+ $("prog").textContent=done+" cevaplandı";
+}
+IT.forEach((it,i)=>{if(it.t==="tf")showTF(i);else showFB(i)});upd();
+$("reset").onclick=()=>{if(!confirm("Tüm cevaplar silinsin mi?"))return;S={};save();location.reload()};
+</script>
+<a class="homebtn" href="index.html" style="position:fixed;left:12px;bottom:12px;z-index:50;padding:8px 14px;border-radius:999px;background:var(--card,#fff);color:var(--ink,#1d1d1b);border:1px solid var(--line,#dcdad2);box-shadow:0 2px 8px rgba(0,0,0,.18);font:600 14px system-ui,Segoe UI,sans-serif;text-decoration:none">← Ana sayfa</a>
+<script src="../theme.js?v=5"></script>
+<script data-goatcounter="https://ackfreak.goatcounter.com/count" async src="https://gc.zgo.at/count.js"></script>
+</body>
+</html>
